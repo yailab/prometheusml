@@ -1,3 +1,6 @@
+# Ignore env files
+**/.env*
+
 *.py[cod]
 
 # C extensions
@@ -26,6 +29,13 @@ pip-log.txt
 .coverage
 .tox
 nosetests.xml
+htmlcov
+
+# mypy cache
+.mypy_cache
+
+# pytest cache
+.pytest_cache
 
 # Translations
 *.mo
@@ -35,8 +45,11 @@ nosetests.xml
 .project
 .pydevproject
 
+# Virtual environment(s)
+.venv
 venv
 app.db
+
 # Logs
 prometheusML.log*
 
@@ -45,11 +58,9 @@ dump.rdb
 
 # Specific app filesystem folders
 uploads
-prometheus/results
-
-# Env files
-.env*
 
 # Pycharm configs
 .idea/
 
+# Mac specific
+**/*.DS_Store

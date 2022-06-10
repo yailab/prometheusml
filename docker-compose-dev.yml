@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  db:
+    image: "postgres:13-alpine"
+    container_name: "prometheus-db"
+    environment:
+      - POSTGRES_PASSWORD=hello_flask
+      - POSTGRES_DB=hello_flask_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - prometheus-net
+  redis:
+    image: "redis"
+    container_name: "prometheus-redis"
+    ports:
+      - "6379:6379"
+    networks:
+      - prometheus-net
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        API_ENV: "dev"
+        gl_username: "${gl_username:?Need to define the username!}"
+    image: "${gl_username}/prometheusml-webapp:devel"
+    container_name: "prometheus-webapp"
+    command: flask run --host=0.0.0.0 --port=5000
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=prometheusML.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:hello_flask@db:5432/hello_flask_dev
+      - SQL_HOST=db
+      - SQL_PORT=5432
+    volumes:
+      - upload_data:${prometheus_dir?Need to define the dir path!}/uploads
+      - ${prometheus_dir}/.venv/
+      - ${PWD}/:${prometheus_dir}/
+    depends_on:
+      - redis
+      - db
+    networks:
+      - prometheus-net
+  worker:
+    image: "${gl_username}/prometheusml-webapp:devel"
+    container_name: "prometheus-worker"
+    environment:
+      - FLASK_APP=prometheusML.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:hello_flask@db:5432/hello_flask_dev
+      - SQL_HOST=db
+      - SQL_PORT=5432
+    command: flask run_worker
+    volumes:
+      - upload_data:${prometheus_dir}/uploads
+      - ${prometheus_dir}/.venv/
+      - ${PWD}/:${prometheus_dir}/
+    depends_on:
+      - redis
+      - webapp
+    networks:
+      - prometheus-net
+
+networks:
+  prometheus-net: {}
+
+volumes:
+  postgres_data:
+  upload_data:

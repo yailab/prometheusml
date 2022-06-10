@@ -1,0 +1,26 @@
+{% extends "base_app.html" %}
+
+{% block content %}
+  
+  <div class="row px-4 py-2">	
+	<div class="col-lg-9 d-flex flex-column">
+	  <h4 class="py-4">{{ current_user.username }}</h4>
+	  
+	  <div class="container-fluid">
+	    <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a class="nav-link active">Projects</a>
+          </li>
+        </ul>
+		
+		<!-- iterate projects to create all the cards --> 
+		{% for project in projects %}
+		   {% include 'utils/_projects.html' %}
+        {% endfor %}
+	  
+	  </div>
+	</div>
+  </div>
+
+{% endblock %}
+  

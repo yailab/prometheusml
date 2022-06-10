@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        {% block head %}
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<!-- Load the local stylesheets -->
+		<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/bootstrap.css') }}">
+		<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/custom-styles.css') }}">
+
+		<!-- add boostrap icons-->
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.2/font/bootstrap-icons.css">
+		
+		<!-- Add the dropzone stylesheet -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.2/dropzone.min.css" integrity="sha512-jU/7UFiaW5UBGODEopEqnbIAHOI8fO6T99m7Tsmqs2gkdujByJfkCbbfPSN4Wlqlb9TGnsuC0YgUgWkRBK7B9A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		
+		<!-- Add the favicon.ico -->
+		<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.svg') }}">
+		
+        <title>PrometheusML</title>
+		
+        {% endblock %}
+    </head>
+	
+	<!-- Main body of the webpage -->
+    <body>
+	  <!-- Container spanning the entire width and full height of the viewport -->
+	  <!-- remove the default 15px padding of navbar adding in the class `px-0 overflow-hidden` -->
+      <div class="d-flex flex-column vh-100">
+	    {% include 'utils/_navbar.html' %}
+		
+		<div class="container-fluid h-100">
+		  <!-- Your page content -->
+          {% block content %}
+		  {% endblock %}
+		</div>
+	  </div>
+	  
+
+      {% block scripts %}
+	  <!-- load Ajax JQuery -->
+	  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+   
+	  <!-- load boostrap dependencies-->
+	  <!-- no need to reload the jQuery -->
+	  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+
+	  <!-- Load dropzone.js -->
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.2/min/dropzone.min.js" integrity="sha512-VQQXLthlZQO00P+uEu4mJ4G4OAgqTtKG1hri56kQY1DtdLeIqhKUp9W/lllDDu3uN3SnUNawpW7lBda8+dSi7w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+	  <!-- Load our local js libraries -->
+	  <script src="{{ url_for('static', filename='js/UI-utils.js') }}"></script>
+
+	  <!-- Load plotly.js -->
+<!--	  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>-->
+
+	  <!-- Load the D3.js JavaScript library -->
+<!--	  <script src="https://d3js.org/d3.v7.min.js"></script>-->
+
+	  <!-- set a global variable to the prefix to the root of the application -->
+	  <!-- make dynamic the path to the app (jQuery) --> 
+	  <script type=text/javascript>
+        $SCRIPT_ROOT = {{ request.script_root|tojson }};
+      </script>
+
+      <!-- manually insert the CSRF token as a custom header in all requests in ajax or other non-WTF forms  -->
+	  <script type="text/javascript">
+      var csrf_token = "{{ csrf_token() }}";  // the token is set by Jinja2
+
+      $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+          if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrf_token);  // insert custom header
+		  }
+        }
+      });
+
+      // initialise all popovers on the pages
+      $(function () {
+        $('[data-trigger="hover"]').popover()
+      });
+
+      // function for page reload
+      $('.btn-refresh').bind('click', function(ev) {
+        // Prevent the default submit action
+        ev.preventDefault();
+        // function to stop the running tasks
+
+        // Stop the task
+        $.post({
+          url: {{ url_for('main.stop_job')|tojson }}
+        })
+          .done(function(data_stop) {
+            window.value = true;
+            // window.location.reload();
+            // see this answer: https://stackoverflow.com/a/45199686
+            // To reload the page discarding the POST data (perform a GET request), use:
+            window.location.href = window.location.href;
+          })
+          .fail(function(data_stop) {
+            // Show the error message
+            $("#errorDiv").removeClass("d-none");
+            $("#errorMessage").text("Could not reset page as cannot stop running tasks...");
+          });
+
+      });
+
+      </script>
+
+	  {% endblock %}
+	  
+    </body>
+	
+	<style>
+      .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: #ff7F2a;
+        background-color: #ff7F2a;
+	  }
+	</style>
+</html>
+
+
+            

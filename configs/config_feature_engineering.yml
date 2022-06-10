@@ -1,0 +1,97 @@
+version: "0.1"
+
+# supported algorithms per application area and asset and their default parameters
+app_areas:
+  continuous_prediction:
+    assets:
+      other:
+        transforms:
+          log:
+            id: "log"
+            label: "Logarithmic"
+            description: "applies natural logarithm"
+            checked: False
+            disabled: False
+            function_name: "log_transform"
+          sigmoid:
+            id: "sigmoid"
+            label: "Sigmoid"
+            description: "applies sigmoid function"
+            checked: False
+            disabled: False
+            function_name: "sigmoid_transform"
+          sqrt:
+            id: "sqrt"
+            label: "Square-root"
+            description: "applies square-root"
+            checked: False
+            disabled: False
+            function_name: "sqrt_transform"
+          polynomial:
+            id: "polynomial"
+            label: "Polynomial"
+            description: "applies polynomial of degree 2"
+            checked: False
+            disabled: False
+            function_name: "polynomial_transform"
+          spline:
+            id: "spline"
+            label: "Spline"
+            description: "applies piecewise polynomial of degree 3"
+            checked: False
+            disabled: False
+            function_name: "spline_transform"
+          box_cox:
+            id: "box_cox"
+            label: "Box-Cox"
+            description: "reshapes skewed data into a normal distribution"
+            checked: False
+            disabled: False
+            function_name: "box_cox_transform"
+
+  class_prediction:
+    assets:
+      other:
+        transforms:
+          log:
+            id: "log"
+            label: "Logarithmic"
+            description: "applies natural logarithm"
+            checked: False
+            disabled: False
+            function_name: "log_transform"
+          sigmoid:
+            id: "sigmoid"
+            label: "Sigmoid"
+            description: "applies sigmoid function"
+            checked: False
+            disabled: False
+            function_name: "sigmoid_transform"
+          sqrt:
+            id: "sqrt"
+            label: "Square-root"
+            description: "applies square-root"
+            checked: False
+            disabled: False
+            function_name: "sqrt_transform"
+          polynomial:
+            id: "polynomial"
+            label: "Polynomial"
+            description: "applies polynomial of degree 2"
+            checked: False
+            disabled: False
+            function_name: "polynomial_transform"
+          spline:
+            id: "spline"
+            label: "Spline"
+            description: "applies piecewise polynomial of degree 3"
+            checked: False
+            disabled: False
+            function_name: "spline_transform"
+          box_cox:
+            id: "box_cox"
+            label: "Box-Cox"
+            description: "reshapes skewed data into a normal distribution"
+            checked: False
+            disabled: False
+            function_name: "box_cox_transform"

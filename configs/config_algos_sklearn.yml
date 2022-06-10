@@ -1,0 +1,281 @@
+version: "0.1"
+
+# supported algorithms per application area and asset and their default parameters
+app_areas:
+  continuous_prediction:
+    assets:
+      other:
+        algorithms:
+          bayesian_ridge_regression:
+            id: "bayesian_ridge_regression"
+            label: "Bayesian Ridge Regression"
+            description: "linear model for binary classification"
+            href: "https://en.wikipedia.org/wiki/Logistic_regression"
+            parameters:
+              alpha_1:
+                label: "alpha coefficient 1"
+                auto_value: 0.000001
+                info: ""
+                min: -9
+                max: -3
+                step: 1
+                from: -7
+                to: -4
+                scale: "log10"
+              alpha_2:
+                label: "alpha coefficient 2"
+                auto_value: 0.000001
+                info: ""
+                min: -9
+                max: -3
+                step: 1
+                from: -7
+                to: -4
+                scale: "log10"
+              lambda_1:
+                label: "lambda coefficient 1"
+                auto_value: 0.000001
+                info: ""
+                min: -9
+                max: -3
+                step: 1
+                from: -7
+                to: -4
+                scale: "log10"
+              lambda_2:
+                label: "lambda coefficient 2"
+                auto_value: 0.000001
+                info: ""
+                min: -9
+                max: -3
+                step: 1
+                from: -7
+                to: -4
+                scale: "log10"
+          nu_svr:
+            id: "nu_svr"
+            label: "SVM (nu)"
+            description: "powerful kernel-based algorithm"
+            href: "https://en.wikipedia.org/wiki/Support-vector_machine"
+            parameters:
+              nu:
+                label: "fraction of support vectors (nu)"
+                auto_value: 0.5
+                info: "Upper bound on the fraction of training errors and a lower bound of the fraction of support vectors"
+                min: 0.1
+                max: 1.0
+                step: 0.1
+                from: 0.2
+                to: 0.7
+                scale: "linear"
+              C:
+                label: "penalty parameter (C)"
+                auto_value: 1.0
+                info: "Penalty parameter C of the error term"
+                min: 0.05
+                max: 30.0
+                step: 0.05
+                from: 0.1
+                to: 3
+                scale: "linear"
+              degree:
+                label: "order of polynomial for the poly kernel"
+                auto_value: 2
+                info: "Order of polynomial for the poly kernel"
+                min: 1
+                max: 5
+                step: 1
+                from: 1
+                to: 3
+                scale: "linear"
+          rf:
+            id: "rf"
+            label: "Random Forest"
+            description: "collection of random decision forests"
+            href: "https://en.wikipedia.org/wiki/Random_forest"
+            parameters:
+              n_estimators:
+                label: "no. of trees"
+                auto_value: 500
+                info: "The number of trees in the forest."
+                min: 10
+                max: 1000
+                step: 10
+                from: 50
+                to: 500
+                scale: "linear"
+              max_depth:
+                label: "tree maximum depth"
+                auto_value: 2
+                info: "The maximum depth of the tree."
+                min: 1
+                max: 21
+                step: 1
+                from: 1
+                to: 7
+                scale: "linear"
+              max_features:
+                label: "maximum no. of features"
+                auto_value:
+                info: "The number of features to consider when looking for the best split."
+                min: 1
+                max: 25
+                step: 1
+                from: 1
+                to: 10
+                scale: "linear"
+
+          gradient_boosting:
+            id: "gradient_boosting"
+            label: "Gradient Booster"
+            description: "stage-wise algorithm that improves upon previous errors"
+            href: "https://en.wikipedia.org/wiki/Gradient_boosting"
+            parameters:
+              n_estimators:
+                label: "no. of estimators in the ensemble"
+                auto_value: 100
+                info: "The number of estimators in the ensemble."  # to be used in the tooltip
+                min: 10
+                max: 1000
+                step: 10
+                from: 100
+                to: 200
+                scale: "linear"
+              max_depth:
+                label: "tree maximum depth"
+                auto_value: 5
+                info: "The maximum depth of the tree."
+                min: 1
+                max: 21
+                step: 1
+                from: 1
+                to: 7
+                scale: "linear"
+              max_features:
+                label: "maximum no. of features"
+                auto_value:
+                info: "The number of features to consider when looking for the best split."
+                min: 1
+                max: 25
+                step: 1
+                from: 1
+                to: 10
+                scale: "linear"
+  class_prediction:
+    assets:
+      other:
+        algorithms:
+          logistic_regression:
+            id: "logistic_regression"
+            label: "Logistic Regression"
+            description: "linear model for binary classification"
+            href: "https://en.wikipedia.org/wiki/Logistic_regression"
+            parameters:
+              C:
+                label: "penalty parameter (C)"
+                auto_value: 1.0
+                info: "Penalty parameter C of the error term"
+                min: 0.05
+                max: 30.0
+                step: 0.05
+                from: 0.1
+                to: 3
+                scale: "linear"
+          nu_svc:
+            id: "nu_svc"
+            label: "SVM (nu)"
+            description: "powerful kernel-based algorithm"
+            href: "https://en.wikipedia.org/wiki/Support-vector_machine"
+            parameters:
+              nu:
+                label: "fraction of support vectors (nu)"
+                auto_value: 0.5
+                info: "Upper bound on the fraction of training errors and a lower bound of the fraction of support vectors"
+                min: 0.1
+                max: 1.0
+                step: 0.1
+                from: 0.2
+                to: 0.7
+                scale: "linear"
+              degree:
+                label: "order of polynomial for the poly kernel"
+                auto_value: 2
+                info: "Order of polynomial for the poly kernel"
+                min: 1
+                max: 5
+                step: 1
+                from: 1
+                to: 3
+                scale: "linear"
+          rf:
+            id: "rf"
+            label: "Random Forest"
+            description: "collection of random decision forests"
+            href: "https://en.wikipedia.org/wiki/Random_forest"
+            parameters:
+              n_estimators:
+                label: "no. of trees"
+                auto_value: 500
+                info: "The number of trees in the forest."  # to be used in the tooltip
+                min: 10
+                max: 1000
+                step: 10
+                from: 50
+                to: 500
+                scale: "linear"
+              max_depth:
+                label: "tree maximum depth"
+                auto_value: 2
+                info: "The maximum depth of the tree."
+                min: 1
+                max: 21
+                step: 1
+                from: 1
+                to: 7
+                scale: "linear"
+              max_features:
+                label: "maximum no. of features"
+                auto_value:
+                info: "The number of features to consider when looking for the best split."
+                min: 1
+                max: 25
+                step: 1
+                from: 1
+                to: 10
+                scale: "linear"
+          gradient_boosting:
+            id: "gradient_boosting"
+            label: "Gradient Booster"
+            description: "stage-wise algorithm that improves upon previous errors"
+            href: "https://en.wikipedia.org/wiki/Gradient_boosting"
+            parameters:
+              n_estimators:
+                label: "no. of estimators in the ensemble"
+                auto_value: 100
+                info: "The number of estimators in the ensemble."  # to be used in the tooltip
+                min: 10
+                max: 1000
+                step: 10
+                from: 100
+                to: 200
+                scale: "linear"
+              max_depth:
+                label: "tree maximum depth"
+                auto_value: 5
+                info: "The maximum depth of the tree."
+                min: 1
+                max: 21
+                step: 1
+                from: 1
+                to: 7
+                scale: "linear"
+              max_features:
+                label: "maximum no. of features"
+                auto_value:
+                info: "The number of features to consider when looking for the best split."
+                min: 1
+                max: 25
+                step: 1
+                from: 1
+                to: 10
+                scale: "linear"

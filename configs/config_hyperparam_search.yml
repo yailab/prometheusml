@@ -1,0 +1,42 @@
+version: "0.1"
+
+# supported search strategies per application area and asset and their default parameters
+app_areas:
+  continuous_prediction:
+    assets:
+      other:
+        search_strategies:
+          random_search_cv:
+            id: "random_search_cv"
+            label: "Random search"
+            parameters:
+              n_iter:
+                label: "no. of iterations"
+                auto_value: 10
+                min: 10
+                max: 100
+                info: "The number of parameter settings that are sampled. It's a trade off between runtime and quality of the solution."  # to be used in the tooltip
+                value: 20
+          grid_search_cv:
+            id: "grid_search_cv"
+            label: "Grid search"
+            parameters:
+  class_prediction:
+    assets:
+      other:
+        search_strategies:
+          random_search_cv:
+            id: "random_search_cv"
+            label: "Random search"
+            parameters:
+              n_iter:
+                label: "no. of iterations"
+                auto_value: 10
+                min: 10
+                max: 100
+                info: "The number of parameter settings that are sampled. It's a trade off between runtime and quality of the solution."  # to be used in the tooltip
+                value: 20
+          grid_search_cv:
+            id: "grid_search_cv"
+            label: "Grid search"
+            parameters:

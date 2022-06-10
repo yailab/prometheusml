@@ -1,0 +1,243 @@
+{% extends "inference/base_prometheus.html" %}
+
+{% block page_content %}
+
+  <!-- error message div -->
+  <div class="row my-2 justify-content-center text-center text-danger d-none" id="errorDiv">
+    <h5 id="errorMessage"></h5>
+  </div>
+
+  <div class="row justify-content-around">
+
+	<!-- application area card -->
+	<div class="card" id="app-card">
+	  <h5 class="card-title pt-3 mx-auto">Selected application</h5>
+	  <div class="card-body d-flex pt-0">
+		<div class="row">
+
+		  <div class="col">
+			<div class="row justify-content-center">
+              <div class="col-md-10" id="app-area-row">
+              </div>
+
+			</div>
+
+            <!-- target variable part -->
+			<h6 class="card-title pt-3 text-center">Select model output</h6>
+			<form class="bd-search d-flex align-items-center">
+			  <input type="search" class="form-control" style="background-color: #ff7F2a; color: white;" id="search-input" placeholder="Search..." aria-label="Search for..." autocomplete="off" disabled>
+			  <button class="btn btn-link d-md-none p-0 ml-3" type="button" data-target="#bd-docs-nav" aria-controls="bd-docs-nav" aria-expanded="false" aria-label="Toggle docs navigation">
+			  </button>
+			</form>
+
+		  </div>
+
+
+		</div>
+	  </div>
+	</div>
+
+    <!-- feature card -->
+	<div class="card" id="feature-card">
+	  <h5 class="card-title pt-3 mx-auto">Selected input features</h5>
+
+	  <!-- the body populated by js-->
+	  <div class="card-body d-flex" id="feature-card-body">
+	  </div>
+	</div>
+
+  </div>
+
+
+
+	<!-- upload part -->
+	<div class="row flex-grow-1 py-3">
+
+	  <!-- column for results -->
+	  <div class="col-md-4 d-flex justify-content-center align-items-start">
+
+		  <span class="p-3" id=result></span>
+
+
+	  </div>
+
+	  <!-- Column for input card -->
+	  <div class="col-md-4 d-flex h-100 justify-content-center align-items-center">
+		  <!-- input data card -->
+	      <div class="card bg-light h-75 w-75">
+		    <div class="card-body d-flex flex-column align-items-center" id="dropzone-area-card">
+		      <h5 class="card-title black-col pt-2 mb-auto">Upload input data</h5>
+		      <span class="pb-5 my-auto">
+			    <a class="nav-link">
+			      <i class="bi bi-cloud-plus-fill" id="upload-icon" style="font-size: 3rem;"></i>
+			    </a>
+		      </span>
+		    </div>
+	      </div>
+	  </div>
+
+	  <!-- Col for previews template for the output of the upload button -->
+	  <div class="col-md-4 d-flex flex-column justify-content-center text-center" id="previews">
+
+			  <div id="template" class="file-row">
+				<div>
+					<p><strong>Filename: </strong><span class="name" data-dz-name></span></p>
+					<strong class="error text-danger" data-dz-errormessage></strong>
+				</div>
+				<div>
+					<p><strong>Size: </strong><span class="size" data-dz-size></span></p>
+					<div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+					  <div class="progress-bar progress-bar-success" style="width:0%; background-color: #ff7F2a;" data-dz-uploadprogress></div>
+					</div>
+				</div>
+
+			  </div>
+	  
+	</div>
+
+  </div>
+
+{% endblock %}
+
+
+<!-- Sidebar content -->
+{% block sidebar_main %}
+
+<!-- The progress bar -->
+<div class="progress mb-auto"
+     style="height: 1.5rem; display: none;"
+     aria-describedby="progress-info"
+     id="progress-side">
+  <div class="progress-bar" role="progressbar" style="width: 5%; background-color: #ff7F2a;" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100">5%</div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<!-- Get the existing config -->
+<script type=text/javascript>
+  const progressbar = $(".progress-bar");
+  const progressDiv = $(".progress");
+
+  $(document).ready(function() {
+  	// pre-populate the target input from the db
+    let target = {{ project.project_config.get('target')|tojson }}
+    $("#search-input").val(target);
+
+    // get the application areas
+	$.ajax({
+	  type: "POST",
+	  url: {{ url_for('main.get_app_areas')|tojson }},
+    })
+    .done(function(data) {
+      // populate the data
+      let id_arr = data.id_list;
+      let labels_arr = data.labels_list;
+
+	  // iterate over the supported application areas
+      for (let i = 0; i < id_arr.length; i++) {
+        let parentDiv = document.getElementById("app-area-row");
+        let radioDiv = create_radio_item(data['id_list'][i], data['labels_list'][i],
+            name="radioAppArea")
+
+        // append the checkbox div in the DOM
+        parentDiv.appendChild(radioDiv);
+      }
+
+      // show the application of the project
+      const app_area_id = {{ project.app_area|tojson }};
+      const app_area_radio = document.getElementById(app_area_id);
+      app_area_radio.disabled = false
+      app_area_radio.checked = true
+
+    })
+	.fail(function() {
+      alert( "error" );
+    });
+
+  });
+</script>
+
+<!-- Get the existing features -->
+<script type=text/javascript>
+  $(document).ready(function() {
+    // TODO: get features after the ranking
+    let user_selected_features_list = {{ project.project_config["user_selected_features"] |tojson }};
+
+    // add the carousel to the card body
+    const [carouselDiv, carouselDivID] = create_carousel_features(user_selected_features_list, false, true);
+    document.getElementById("feature-card-body").appendChild(carouselDiv);
+
+  });
+</script>
+
+<!-- configure dropzone.js -->
+<script type=text/javascript>
+	let previewNode = document.querySelector("#template");
+	previewNode.id = "";
+	let previewTemplate = previewNode.parentNode.innerHTML;
+	previewNode.parentNode.removeChild(previewNode);
+
+	$('#dropzone-area-card').dropzone({
+		url: {{ url_for('main.upload_input', project_id=project.id, dataset_type='inference')|tojson }},
+		clickable: "#upload-icon",
+		// autoQueue: false,                       // Make sure the files aren't queued until manually added
+		acceptedFiles: '.csv',                     // check is that is correct for other OS
+		maxFilesize: 100,                          // max file size (MB)
+		maxFiles: "1",
+		previewsContainer: "#previews",
+		previewTemplate: previewTemplate,
+		chunking: true,                            // we use the default chunk-size
+		retryChunks: true,                         // retry failed chunks. Limit of retries is 3
+		parallelChunkUploads: false,               // upload the individual chunks of a file simultaneously
+		headers: {
+          'X-CSRF-TOKEN': csrf_token
+    	},
+		// Setup the event listeners
+		init: function() {
+		  // Remove existing uploaded data
+          this.on("addedfiles", function() {
+            // console.log("Started the deletion process");
+            $.ajax({
+                url: {{ url_for('main.remove_upload_data', project_id=project.id, dataset_type='inference')|tojson }},
+                type: "POST"
+            })
+            .done(function() {
+              console.log("Deletion process finished");
+            });
+          });
+		  this.on("queuecomplete", function(file, responseText) {
+			// console.log(responseText);
+            // Check that the uploaded data have the necessary features
+            $.post({
+              url: {{ url_for('main.check_uploads_inference', project_id=project.id)|tojson }},
+            })
+            .done(function() {
+              $("#btnDrift").removeClass("d-none");
+			  $(".btn-next").removeClass("d-none");
+            })
+            .fail(function(data) {
+              $("#errorDiv").removeClass("d-none");
+              $("#errorMessage").text(data.responseJSON["errorMessage"]);
+            });
+
+            // Filter the uploaded data ?
+          });
+      }
+	});
+
+	$(document).ready(function() {
+      $(".btn-next").on("click", function() {
+        // Page refresh listener only for un-clicked events
+        window.value = true;
+        location.href = {{ url_for('main.data_predict', project_id=project.id)|tojson }};
+      })
+    });
+
+</script>
+
+{% endblock %}

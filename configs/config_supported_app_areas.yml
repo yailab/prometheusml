@@ -1,0 +1,10 @@
+version: "0.1"
+
+# supported application areas
+app_areas:
+  continuous_prediction:
+    id: "continuous_prediction"
+    label: "Continuous prediction"
+  class_prediction:
+    id: "class_prediction"
+    label: "Class prediction"

@@ -1,0 +1,566 @@
+{% extends "training/base_prometheus.html" %}
+
+<!-- The main page content -->
+{% block page_content %}
+
+  <!-- intro row -->
+  <div class="row h-100 align-items-center" id="progress-row">
+
+	<div class="col">
+      <!-- error message div -->
+	  <div class="row text-center text-danger d-none" id="errorDiv">
+	    <h5 id="errorMessage"></h5>
+	  </div>
+
+	  <!-- Button row -->
+	  <div class="row justify-content-center">
+		<button type="button" id="btn-validate" class="btn btn-primary d-flex justify-content-center align-items-center">
+	      <i class="bi bi-play-fill pr-1 my-auto" style="font-size: 1.2rem;"></i><span>Check model performance</span>
+	    </button>
+	  </div>
+
+	  <!-- Progress row -->
+	  <div class="row justify-content-center pt-5">
+		<div class="col-6">
+		  <!-- The task description -->
+		  <span class="pb-1" style="display: none;" id="validate-progress-info">
+	        Description of the task...
+	      </span>
+		  <!-- The progress bar -->
+		  <div class="progress" style="height: 1.5rem; display: none;" aria-describedby="progress-info">
+	        <div class="progress-bar" role="progressbar" style="width: 5%; background-color: #ff7F2a;" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100">5%</div>
+	      </div>
+	    </div>
+	  </div>
+
+	</div>
+
+  </div>
+
+  <!-- tabs row -->
+  <div class="row d-none justify-content-end" id="tabsRow">
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link model-tab active"
+           id="tuned" data-toggle="tab" role="tab"
+           aria-controls="home" aria-selected="true"
+           data-trigger="hover"
+           data-content="Model tuned manually by you."
+		   data-placement="bottom">
+            Tuned model
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link model-tab" id="default"
+           data-toggle="tab" role="tab"
+           aria-controls="profile"
+           aria-selected="false"
+           data-trigger="hover"
+           data-content="Model based on default parameters."
+		   data-placement="bottom">
+           Default model</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <div class="tooltip-wrapper" data-trigger="hover"
+           data-html="true"
+           data-content="Model tuned by Prometheus<span class='text-prometheus'>ML</span>. <br/> <span class='text-prometheus'>This feature is locked</span>."
+		   data-placement="bottom">
+              <a class="nav-link disabled" id="prometheusTab"
+               data-toggle="tab" role="tab"
+               aria-controls="profile" aria-selected="false">
+            Prometheus model</a>
+        </div>
+
+      </li>
+    </ul>
+  </div>
+
+
+  <!-- tables row -->
+  <div class="row d-none justify-content-center" id="tableRow">
+
+    <div class="col-md-6 mx-auto my-2 d-none" id="right-table-col">
+
+	  <!-- Metrics table -->
+	  <table class="table table-striped table-hover">
+	    <thead>
+		  <tr>
+		    <th scope="col"></th>
+		    <th scope="col" style="text-align: center">Model validation results</th>
+		  </tr>
+	    </thead>
+	    <tbody id="metrics-table-body">
+	    </tbody>
+	  </table>
+
+	</div>
+
+	<div class="col-md-6 mx-auto my-2 d-flex justify-content-center align-items-center">
+     <!-- summary table -->
+     <div class="row justify-content-center d-none align-items-center" id="thresholdRangeRow">
+      <div class="col-lg-4 text-left">
+          <label for="thresholdRange" class="form-label" id="thresholdLabel">
+             (%):
+          </label>
+      </div>
+
+	  <div class="col-lg-6">
+          <input type="range" class="custom-range" id="thresholdRange" min="40" max="90" step="1" disabled>
+	  </div>
+      <div class="col-lg-2 text-center">
+	  </div>
+
+    </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Graph row -->
+  <div class="row justify-content-center align-items-center d-none" id="graphRow">
+
+    <div class="col-md-5 d-flex flex-column p-0 justify-content-center">
+      <img src="" class="rounded mx-auto img-fluid d-none graph"
+	    id="left-image" alt="Not available">
+    </div>
+
+    <div class="col-md-7 d-flex flex-column p-0 justify-content-center">
+	  <img src="" class="rounded mx-auto img-fluid d-none graph"
+			 id="right-image" alt="Not available">
+    </div>
+
+  </div>
+
+{% endblock %}
+
+
+<!-- Sidebar content -->
+{% block sidebar_main %}
+    <!-- The progress bar -->
+    <div class="progress mb-auto"
+         style="height: 1.5rem; display: none;"
+         aria-describedby="progress-info"
+         id="progress-side">
+      <div class="progress-bar" role="progressbar" style="width: 5%; background-color: #ff7F2a;" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100">5%</div>
+    </div>
+
+    <button type="button" id="btn-experiment"
+            class="btn btn-outline-primary my-sm-auto my-3 justify-content-center align-items-center d-none"
+            data-trigger="hover" title="Experiment further?"
+            data-content="Go back to data preparation step."
+            data-placement="top">
+      <i class="bi bi-arrow-clockwise pr-1" style="font-size: 1.2rem;"></i><span>Experiment</span>
+    </button>
+
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<!-- Script for the threshold slider -->
+<script type="text/javascript">
+  const slider = document.getElementById("thresholdRange");
+  const threshold_slider_label = document.getElementById("thresholdLabel");
+  threshold_slider_label.textContent = 'Decision threshold ' + ': ';
+  // Add a span
+  const slider_value = document.createElement("span");
+  threshold_slider_label.appendChild(slider_value);
+
+  // Display the default slider value
+  const decision_thres_pcnt = 55
+  slider_value.innerHTML =  decision_thres_pcnt + '%';
+  slider.value = decision_thres_pcnt;
+</script>
+
+
+<!-- JQuery script update the progress button, etc. -->
+<script type=text/javascript>
+	const progress_info = $("#validate-progress-info");
+	const progressbar = $(".progress-bar");
+	const progressDiv = $(".progress");
+	let right_plot = $("#right-image");
+    let left_plot = $("#left-image");
+
+	$(function() {
+    $('#btn-validate').bind('click', function(ev) {
+      // Prevent the default submit action
+      ev.preventDefault();
+      $(this).prop('disabled', true);  // disable button
+
+      // Reset the progress bar when user re-clicks it
+	  progress_info.show();
+	  progressDiv.show()
+	  progressbar.show();
+	  set_bar(0);
+	  update_bar(99);
+
+	  $("#progress-side").hide();  // hide sidebar progress
+
+	  // Get the data from the API route -- Sent the request to the URL
+      $.post({
+          url: {{ url_for('main.validate_model', project_id=project.id)|tojson }}
+      })
+	  // on success of the `Promise` object
+	  .done(function(res) {
+		// show initial message from server
+        progress_info.text(res.info);
+
+		// run the function recursively to check the status
+        (function checkStatus(taskID) {
+          $.ajax({
+            url: `/tasks/${taskID}/status`,
+            method: 'GET',
+          })
+          .done((res) => {
+            const taskStatus = res.data.task_status;
+            console.log(taskStatus);
+
+            switch (taskStatus) {
+              case "unknown":
+                progress_info.text("Model validation has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              case "finished":
+                $.ajax({
+                  url: {{ url_for('main.store_metrics_pipeline', project_id=project.id)|tojson }},
+                  type: "POST",
+                  data: JSON.stringify({
+                      'task_id': res.data.task_id
+                  }),
+                  dataType: "json",
+                  contentType: "application/json; charset=utf-8"
+                })
+                .done(function(data) {
+                  console.log(data.pipeline);
+                  $.ajax({
+                    url: {{ url_for('main.set_perform_metrics', project_id=project.id)|tojson }},
+                    type: "POST",
+                    data: JSON.stringify({}),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8"
+                  })
+                  .done(function(data){
+                    // show that the task was completed
+                    progress_info.text("Prometheus completed model validation!");
+                    set_bar_stop(100);
+
+                    // stop showing the button and the progressbar
+                    $("#progress-row").addClass("d-none");
+
+                    // populate the metrics table
+                    const metricsTableBodyDiv = document.getElementById("metrics-table-body");
+
+                    for (const metric in data.metrics.tuned) {
+                      const metricObj = data.metrics.tuned[metric]
+                      const metricTableTr = document.createElement("tr");  // create the `tr` element
+                      metricsTableBodyDiv.appendChild(metricTableTr);  // add it to the table body
+
+                      const metricTableTh = document.createElement("th");  // create the `th` element
+                      metricTableTh.setAttribute("scope", "row");
+                      const thText = document.createTextNode(metricObj.desc);
+                      metricTableTh.appendChild(thText);  // add text to `th`
+                      metricTableTr.appendChild(metricTableTh);  // add `th` to the `tr`
+
+                      const metricTableTd = document.createElement("td");  // create the `td` element
+                      metricTableTd.style.textAlign = "center";
+                      const tdText = document.createTextNode(metricObj.value.toString() + "%");
+                      metricTableTd.appendChild(tdText);  // add text to `td`
+                      metricTableTr.appendChild(metricTableTd);  // add `td` to the `tr`
+                    }
+                    $("#right-table-col").removeClass("d-none");  // show metrics table
+
+                    // get the plots
+                    {% if project.app_area == "continuous_prediction" %}
+                      // left figure
+                      $.get({
+					    url: {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="hist", model_type="tuned")|tojson }},
+					  })
+					  .done((data) => {
+						const svg = data.img_svg;
+						let blob = new Blob([svg], {type: 'image/svg+xml'});
+						let img_url = URL.createObjectURL(blob);
+                        left_plot.attr("src", img_url);
+                      })
+                      .fail((err) => {
+                        left_plot.attr("alt", "Couldn't load validation image");
+                      });
+
+                      // right figure
+                      $.get({
+					    url: {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="pred", model_type="tuned")|tojson }},
+					  })
+					  .done((data) => {
+						const svg = data.img_svg;
+						let blob = new Blob([svg], {type: 'image/svg+xml'});
+						let img_url = URL.createObjectURL(blob);
+                        right_plot.attr("src", img_url);
+                      })
+                      .fail((err) => {
+                        right_plot.attr("alt", "Couldn't load validation image");
+                      });
+
+                    {% else %}
+                      // left figure
+                      const url_init = {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="conf-", model_type="tuned")|tojson }};
+                      const url_array = url_init.split("-");
+                      let url_conf = url_array[0] + "-" + Math.floor( data.decision_threshold * 100 ) + url_array[1]
+                      $.get({
+					    url: url_conf,
+					  })
+					  .done((data) => {
+						const svg = data.img_svg;
+						let blob = new Blob([svg], {type: 'image/svg+xml'});
+						let img_url = URL.createObjectURL(blob);
+                        left_plot.attr("src", img_url);
+                      })
+                      .fail((err) => {
+                        left_plot.attr("alt", "Couldn't load validation image");
+                      });
+
+                      // right figure
+                      const url_init_right = {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="recall-", model_type="tuned")|tojson }};
+                      const url_array_right = url_init_right.split("-");
+                      let url_recall = url_array_right[0] + "-" + Math.floor( data.decision_threshold * 100 ) + url_array_right[1]
+                      $.get({
+					    url: url_recall,
+					  })
+					  .done((data) => {
+						const svg = data.img_svg;
+						let blob = new Blob([svg], {type: 'image/svg+xml'});
+						let img_url = URL.createObjectURL(blob);
+                        right_plot.attr("src", img_url);
+                      })
+                      .fail((err) => {
+                        right_plot.attr("alt", "Couldn't load validation image");
+                      });
+
+                      $("#thresholdRangeRow").removeClass("d-none");  // show the threshold range div
+                    {% endif %}
+
+                    left_plot.removeClass("d-none").addClass("d-block");  // show graph on the left
+                    right_plot.removeClass("d-none").addClass("d-block");  // show graph on the right
+
+                    // show the graph and table row
+                    $("#tabsRow").removeClass("d-none");
+                    $("#tableRow").removeClass("d-none");
+                    $("#graphRow").removeClass("d-none");
+
+                    // show the next button
+                    $("#btn-launch").removeClass("d-none");
+                    $("#btn-experiment").removeClass("d-none");
+                  })
+                  .fail(function(err) {
+                    console.log(err);
+                  });
+                })
+                .fail(function(err) {
+                  console.log(err);
+                });
+                break;
+              case "failed":
+                progress_info.text("Model validation has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              default:
+                // queued/started/deferred
+                setTimeout(function() {
+                  checkStatus(res.data.task_id);
+                }, 5000);
+            }
+          })
+          .fail((err) => {
+            console.log(err);
+          });
+        })(res.data.task_id)
+
+      })
+	  .fail(function(data) {
+		// on fail of the `Promise` object
+		console.log('it has failed successfully haha ')
+		progress_info.text("Model validation has failed... Unknown error (contact yaiLab)");
+		set_bar_stop(0);
+      });
+    });
+  });
+
+</script>
+
+
+<script type="text/javascript">
+
+  // redirect them to the data preparation step
+  $('#btn-experiment').bind('click', function(ev) {
+    // Prevent the default submit action
+    ev.preventDefault();
+
+    window.value = true;
+    location.href = {{ url_for('main.data_transform_update', project_id=project.id)|tojson }};
+  });
+
+  // next step button
+  $('#btn-launch').bind('click', function(ev) {
+    // Prevent the default submit action
+    ev.preventDefault();
+
+    // get the selected tab id
+    const model_id = $(".model-tab.active").attr('id');
+
+    // write it permanently to the db
+    $.ajax({
+      type: "POST",
+	  url: {{ url_for('main.launch_model', project_id=project.id)|tojson }},
+      data: JSON.stringify({
+          'selected_model': model_id
+      }),
+      dataType: "json",
+      contentType: "application/json; charset=utf-8",
+    })
+    .done(function() {
+      // go to model deployment only if the launch was successful
+      window.value = true;
+      window.location.href = {{ url_for('main.model_update', project_id=project.id)|tojson }};
+    })
+    .fail(function() {
+      // show an error
+      $("#errorDiv").removeClass("d-none");
+	  $("#errorMessage").text("Failed to launch the model. Contact yaiLab.");
+    })
+
+  });
+
+
+ window.onbeforeunload = function () {
+  if(!window.value) {
+    return '';
+  }
+};
+
+</script>
+
+<script type="text/javascript">
+  $(function() {
+    $(".model-tab").bind('click', function(ev) {
+      console.log(ev.target.id)
+      // get the metrics
+      $.ajax({
+	   url: {{ url_for('main.get_validation_metrics', project_id=project.id)|tojson }},
+	   type: "POST",
+        data: JSON.stringify({
+          'tab_id': ev.target.id
+        }),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+	  })
+      .done(function(data) {
+        // empty the existing table body
+        $("#metrics-table-body").empty();
+        // populate the metrics table
+        const metricsTableBodyDiv = document.getElementById("metrics-table-body");
+
+        for (const metric in data.metrics) {
+          const metricObj = data.metrics[metric]
+          const metricTableTr = document.createElement("tr");  // create the `tr` element
+          metricsTableBodyDiv.appendChild(metricTableTr);  // add it to the table body
+
+          const metricTableTh = document.createElement("th");  // create the `th` element
+          metricTableTh.setAttribute("scope", "row");
+          const thText = document.createTextNode(metricObj.desc);
+          metricTableTh.appendChild(thText);  // add text to `th`
+          metricTableTr.appendChild(metricTableTh);  // add `th` to the `tr`
+
+          const metricTableTd = document.createElement("td");  // create the `td` element
+          metricTableTd.style.textAlign = "center";
+          const tdText = document.createTextNode(metricObj.value.toString() + "%");
+          metricTableTd.appendChild(tdText);  // add text to `td`
+          metricTableTr.appendChild(metricTableTd);  // add `td` to the `tr`
+        }
+
+        // update the graphs if it was successful
+        {% if project.app_area == "continuous_prediction" %}
+          let url_init_left_img = {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="hist", model_type="tuned")|tojson }};
+          let url_update_left_img = url_init_left_img.replace(/tuned|default/, ev.target.id);
+          $.get({
+            url: url_update_left_img,
+          })
+          .done((data) => {
+            const svg = data.img_svg;
+            let blob = new Blob([svg], {type: 'image/svg+xml'});
+            let img_url = URL.createObjectURL(blob);
+            left_plot.attr("src", img_url);
+          })
+          .fail((err) => {
+            left_plot.attr("alt", "Couldn't load validation image");
+          });
+
+          let url_init_right_img = {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="pred", model_type="tuned")|tojson }};
+          let url_update_right_img = url_init_right_img.replace(/tuned|default/, ev.target.id);
+          $.get({
+            url: url_update_right_img,
+          })
+          .done((data) => {
+            const svg = data.img_svg;
+            let blob = new Blob([svg], {type: 'image/svg+xml'});
+            let img_url = URL.createObjectURL(blob);
+            right_plot.attr("src", img_url);
+          })
+          .fail((err) => {
+            right_plot.attr("alt", "Couldn't load validation image");
+          });
+
+        {% else %}
+          $("#thresholdRangeRow").removeClass("d-none");  // show the threshold range div
+
+          // left figure
+          const url_init = {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="conf-", model_type="tuned")|tojson }};
+          const url_array = url_init.split("-");
+          let url_conf = url_array[0] + "-" + 55 + url_array[1]
+          let url_conf_update = url_conf.replace(/tuned|default/, ev.target.id);
+          $.get({
+            url: url_conf_update,
+          })
+          .done((data) => {
+            const svg = data.img_svg;
+            let blob = new Blob([svg], {type: 'image/svg+xml'});
+            let img_url = URL.createObjectURL(blob);
+            left_plot.attr("src", img_url);
+          })
+          .fail((err) => {
+            left_plot.attr("alt", "Couldn't load validation image");
+          });
+
+          // right figure
+          const url_init_right = {{ url_for('main.get_img_src', project_id=project.id, pipe_step="validation", fig_type="recall-", model_type="tuned")|tojson }};
+          const url_array_right = url_init_right.split("-");
+          let url_recall = url_array_right[0] + "-" + 55 + url_array_right[1]
+          let url_recall_update = url_recall.replace(/tuned|default/, ev.target.id);
+          $.get({
+            url: url_recall_update,
+          })
+          .done((data) => {
+            const svg = data.img_svg;
+            let blob = new Blob([svg], {type: 'image/svg+xml'});
+            let img_url = URL.createObjectURL(blob);
+            right_plot.attr("src", img_url);
+          })
+          .fail((err) => {
+            right_plot.attr("alt", "Couldn't load validation image");
+          });
+        {% endif %}
+
+        // update the launch button text
+        $('#btn-launch span').text("Launch " + ev.target.id + " model");
+      })
+      .fail(function() {
+        // show an error
+        $("#errorDiv").removeClass("d-none");
+	    $("#errorMessage").text("Failed to update the performance metrics. Contact yaiLab.");
+      })
+    })
+  });
+</script>
+
+
+{% endblock %}

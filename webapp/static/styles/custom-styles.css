@@ -1,0 +1,210 @@
+.black-col{
+    color:black;
+}
+
+a {
+  color: #ff7F2a;
+}
+
+a:hover {
+  color: whitesmoke;
+}
+
+.text-prometheus {
+ color: #ff7F2a;
+}
+
+/* Custom bootstrap button */
+.btn-circle {
+  width: 45px;
+  height: 45px;
+  line-height: 45px;
+  text-align: center;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.btn-circle i {
+  position: relative;
+  top: -1px;
+}
+
+.btn-circle.btn-sm {
+	width: 30px;
+	height: 30px;
+	padding: 6px 0px;
+	border-radius: 15px;
+	font-size: 8px;
+	text-align: center;
+}
+.btn-circle.btn-md {
+	width: 50px;
+	height: 50px;
+	padding: 7px 10px;
+	border-radius: 25px;
+	font-size: 10px;
+	text-align: center;
+}
+.btn-circle.btn-xl {
+	width: 5rem;
+	height: 5rem;
+	padding: 10px 16px;
+	border-radius: 2.5rem;
+	font-size: 1.3rem;
+	text-align: center;
+	border-color: #ff7F2a;
+	color: #ff7F2a;
+}
+
+/* change background colour of dropdown items */
+.dropdown-item:hover {
+  background: #ff7F2a;
+}
+
+/* put carousel controls on the outside */
+.carousel-control-prev {
+  margin-left: -2rem;
+}
+
+.carousel-control-next {
+  margin-right: -2rem;
+}
+
+/* put carousel indicators on the bottom */
+.carousel-indicators {
+  margin-bottom: -1.5rem;
+}
+
+/* label overflow ellipsis */
+.custom-control-label {
+    display: inline-block;
+    max-width: 12rem;
+    /*!*color: red;*!*/
+    /*overflow: hidden;*/
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* change the link color */
+.nav-link {
+    color: #303030;
+}
+
+/* change the color of active or hovered links */
+.nav-link:hover {
+    color: #ff7F2a;
+}
+
+.nav-tabs .nav-item .nav-link.active {
+  /*color: #ff7F2a;*/
+  background-color: #ff7F2a;
+}
+
+.nav-custom .nav-link {
+    color: #adb5bd;
+}
+
+.nav-custom .nav-link:hover {
+    color: #ff7F2a;
+}
+
+
+/* Change text colour of active link in nav pills */
+.nav-pills .custom-navitem .nav-link {
+    color: black;
+}
+
+.nav-pills .custom-navitem .nav-link:not(.active) {
+    color: white;
+}
+
+
+/* Change the slider color */
+.rc-slider-track {
+  background-color: #ff7F2a;
+}
+
+.rc-slider-dot-active {
+  border-color: #6c757d;
+  border: solid 2px #6c757d;
+}
+
+.rc-slider-handle {
+  background-color: #ff7F2a;
+  border-color: #ff7F2a;
+}
+
+.rc-slider-handle:hover {
+  border-color: #6c757d;
+}
+
+.rc-slider-handle-active:active {
+  border-color: #6c757d;
+}
+
+/* override the navbar dropdown menu hover colour */
+/* .dropdown-item:hover, .dropdown-item:focus .a:hover { */
+  /* background-color: red; */
+/* } */
+/* #custom-menu-color .a:hover { */
+	/* background-color: red; */
+/* } */
+
+/* adjust the navbar logo dim */
+.navbar-logo {
+  height: 30px;
+}
+
+/* The tsparticles style options */
+#tsparticles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/* Change the colour of slider*/
+.custom-range::-webkit-slider-thumb {
+  background: #ff7F2a;
+}
+
+.custom-range::-moz-range-thumb {
+  background: #ff7F2a;
+}
+
+.custom-range::-ms-thumb {
+  background: #ff7F2a;
+}
+
+
+.custom-range::-webkit-slider-thumb:active {
+    background-color: #ff7F2a;
+}
+.custom-range::-webkit-slider-thumb,
+.custom-range:focus::-webkit-slider-thumb,
+.custom-range:focus::-moz-range-thumb,
+.custom-range:focus::-ms-thumb {
+    box-shadow: #ff7F2a;
+}
+
+/* Full page modal */
+.modal {
+  padding: 0 !important; // override inline padding-right added from js
+}
+.modal .modal-dialog {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+}
+.modal .modal-content {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+.modal .modal-body {
+  overflow-y: auto;
+}
+
+form .form-group.form-check input[type="checkbox"] {
+  accent-color: #ff7F2a;
+}

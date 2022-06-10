@@ -1,0 +1,77 @@
+{% extends "training/base_prometheus.html" %}
+
+<!-- The main page content -->
+{% block page_content %}
+
+	<div class="row justify-content-center align-items-center">
+	  <div class="col-md-8 h-100 d-flex flex-column justify-content-center">
+
+		<!-- The task description -->
+		<span class="h5 pb-5 text-center" id="">
+		  Your model have been <span style="color: #ff7F2a"> updated </span> successfully!
+		</span>
+
+		<p class="mt-5">
+		  Continue doing your magic with your updated model:
+		  <button type="button" class="btn btn-primary mx-2" id="btn-inference-redirect">
+			Predict
+		  </button>
+		</p>
+
+
+		<p>
+		  Or show me my spellbook:
+		  <button type="button" class="btn btn-primary mx-2" id="btn-projects-redirect">
+		    Go to my projects
+		  </button>
+		</p>
+
+	  </div>
+	</div>
+
+    <div class="row flex-grow-1 justify-content-center align-items-center mt-5">
+      <div class="tooltip-wrapper" data-trigger="hover"
+           data-html="true"
+           data-content="Download your ML pipeline in python code. <br/> <span class='text-prometheus'>This feature is locked</span>."
+		   data-placement="bottom">
+        <button type="button" id="btn-download-pipeline"
+                class="btn btn-outline-primary m-auto justify-content-center align-items-center">
+          <i class="bi bi-download pr-1" style="font-size: 1.2rem;"></i><span>Download your ML pipeline</span>
+        </button>
+      </div>
+    </div>
+
+
+
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<script type="text/javascript">
+
+ $('#btn-inference-redirect').bind('click', function(ev) {
+   // Prevent the default submit action
+   ev.preventDefault();
+   // set global value so it skips the check on pafe refresh
+   window.value = true;
+   location.href = {{ url_for('main.project_input', project_id=project.id)|tojson }};
+ });
+
+ $('#btn-projects-redirect').bind('click', function(ev) {
+   // Prevent the default submit action
+   ev.preventDefault();
+   // set global value so it skips the check on pafe refresh
+   window.value = true;
+   location.href = {{ url_for('main.projects')|tojson }};
+ });
+
+</script>
+
+
+{% endblock %}
+
+
+	

@@ -1,0 +1,198 @@
+{% extends "inference/base_prometheus.html" %}
+
+<!-- The main page content -->
+{% block page_content %}
+
+  <!-- existing model details row -->
+  <div class="row my-4 d-none">
+  </div>
+
+  <!-- progress row -->
+  <div class="row h-100 align-items-center" id="progress-row">
+
+	<div class="col">
+	  <!-- Button row -->
+	  <div class="row justify-content-center">
+		<button type="button" id="btn-predict" class="btn btn-primary d-flex">
+	   	    <i class="bi bi-play-fill pr-1 mx-auto my-auto" style="font-size: 1.2rem;"></i><span class="mx-auto my-auto">Predict &#10; (hocus-pocus)</span>
+	    </button>
+	  </div>
+
+	  <!-- Progress row -->
+	  <div class="row justify-content-center pt-5">
+		<div class="col-6">
+		  <!-- The task description -->
+		  <span class="pb-1" style="display: none;" id="predict-progress-info">
+	        Description of the task...
+	      </span>
+		  <!-- The progress bar -->
+          <div class="progress" id="predict-progress" style="height: 1.5rem; display: none;" aria-describedby="progress-info">
+	        <div class="progress-bar" id="predict-progressbar" role="progressbar" style="width: 25%;
+	    background-color: #ff7F2a;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%
+		    </div>
+	      </div>
+	    </div>
+	  </div>
+
+	</div>
+
+  </div>
+
+
+  <!-- Graph row -->
+  <div class="row flex-grow-1 justify-content-center align-items-center">
+    <div class="col-md-10 d-flex flex-column justify-content-center">
+
+		<img src="" class="rounded mx-auto img-fluid d-none"
+			 id="image-predict" alt="Not available">
+
+    </div>
+  </div>
+{% endblock %}
+
+
+<!-- Sidebar content -->
+{% block sidebar_main %}
+
+<button type="button" id="btnDownload"
+      class="btn btn-outline-primary mb-auto justify-content-center align-items-center d-none">
+<i class="bi bi-download pr-1" style="font-size: 1.2rem;"></i><span>Download results</span>
+</button>
+
+<button type="button" id="btn-predict-again"
+      class="btn btn-primary justify-content-center my-auto align-items-center d-none"
+      data-trigger="hover" title="Need to make more predictions?"
+      data-content="Upload new data."
+      data-placement="top">
+<i class="bi bi-arrow-clockwise pr-1" style="font-size: 1.2rem;"></i><span>Make more predictions</span>
+</button>
+
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+
+<!-- JQuery script update the progress button, etc. -->
+<script type=text/javascript>
+	const progress_info = $("#predict-progress-info");
+	const progressbar = $("#predict-progressbar");
+    const progressDiv = $("#predict-progress");
+    const predictImg = $("#image-predict");
+    const downloadBtn = $("#btnDownload");
+
+	$(function() {
+    $('#btn-predict').bind('click', function(ev) {
+      // Prevent the default submit action
+      ev.preventDefault();
+      // disable the button when pressed
+      $(this).prop('disabled', true);
+
+      // Reset the progress bar when user re-clicks it
+	  progressDiv.show();
+	  progress_info.show();
+	  set_bar(0);
+	  update_bar(99);
+
+	  // Hide the image when they press it again
+	  predictImg.addClass("d-none").removeClass("d-block");
+
+	  // Get the data from the API route -- Sent the request to the URL
+      $.get({
+        url: {{ url_for('main.run_inference', project_id=project.id, asset_type=project.asset)|tojson }}
+      })
+      .done(function(res) {
+        // show initial message from server
+        progress_info.text(res.info);
+
+        // run the function recursively to check the status
+        (function checkStatus(taskID) {
+          $.ajax({
+            url: `/tasks/${taskID}/status`,
+            method: 'GET',
+          })
+          .done((res) => {
+            const taskStatus = res.data.task_status;
+            console.log(taskStatus);
+
+            switch (taskStatus) {
+              case "unknown":
+                progress_info.text("Model inference has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              case "finished":
+				  progress_info.text("Prometheus completed the predictions!");
+                  set_bar_stop(100);
+
+				  // fetch the image
+				  $.get({
+				    url: {{ url_for('main.get_img_src', project_id=project.id, pipe_step="inference", fig_type="None", model_type="None")|tojson }},
+				  })
+			      .done((data) => {
+				    const svg = data.img_svg;
+				    let blob = new Blob([svg], {type: 'image/svg+xml'});
+				    let img_url = URL.createObjectURL(blob);
+				    predictImg.attr("src", img_url);
+				  })
+			      .fail((err) => {
+				    predictImg.attr("alt", "Couldn't load predictions' image");
+				  });
+
+				  // show the image
+			  	  predictImg.addClass("d-block").removeClass("d-none");
+				  // show the button to re-do inference
+				  $("#btn-predict-again").removeClass("d-none").addClass("d-flex");
+				  $("#progress-row").addClass("d-none");
+				  // show the download button
+			      downloadBtn.addClass("d-flex").removeClass("d-none");
+
+                break;
+              case "failed":
+                progress_info.text("Model inference has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              default:
+                // queued/started/deferred
+                setTimeout(function() {
+                  checkStatus(res.data.task_id);
+                }, 5000);
+            }
+          })
+          .fail((err) => {
+            console.log(err);
+          });
+        })(res.data.task_id)
+
+      })
+      .fail(function(data) {
+        set_bar_stop(0);
+        progress_info.text("The prediction has failed... (contact yaiLab)");
+      });
+    });
+  });
+</script>
+
+
+<script type="text/javascript">
+  // download the results
+  $('#btnDownload').bind('click', function(ev) {
+    // Prevent the default submit action
+    ev.preventDefault();
+    window.value = true;
+    location.href = {{ url_for('main.download_file', project_id=project.id, name="prediction_results")|tojson }};
+  });
+
+  // redirect them to input data step
+  $('#btn-predict-again').bind('click', function(ev) {
+    // Prevent the default submit action
+    ev.preventDefault();
+
+    window.value = true;
+    location.href = {{ url_for('main.project_input', project_id=project.id)|tojson }};
+  });
+
+</script>
+
+{% endblock %}

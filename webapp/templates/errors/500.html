@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+	<div class="d-flex align-items-center flex-column justify-content-center h-100">
+      <h1 class="p-2">An unexpected error has occurred</h1>
+	  <p class="p-2">The administrator has been notified. Sorry for the inconvenience!</p>
+      <p class="p-2"><a href="{{ url_for('main.index') }}" class="btn btn-secondary btn-lg">Back</a></p>
+    </div>
+{% endblock %}

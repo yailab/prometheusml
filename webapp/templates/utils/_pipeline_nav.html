@@ -1,0 +1,26 @@
+<!-- Set the necessary urls -->
+{% set input_url = url_for('main.project_input', project_id=project.id) %}
+{% set predict_url = url_for('main.data_predict', project_id=project.id) %}
+
+
+<div class="container">
+
+  <nav class="nav nav-pills flex-column flex-sm-row py-3 justify-content-center" id="nav_pipe">
+    <li class="nav-item custom-navitem">
+      <a class="nav-link mx-3 my-2 text-center" id="nav-input" href="{{ input_url }}">Input data</a>
+    </li>
+    <li class="nav-item custom-navitem">
+      <a class="nav-link mx-3 my-2 text-center" id="nav-predict" href="{{ predict_url }}">Predict</a>
+    </li>
+    <li class="nav-item custom-navitem">
+      <button type="button"
+              class="btn btn-block btn-primary mx-2 my-2 btn-next d-none"
+              data-trigger="hover"
+              data-content="Next step"
+              data-placement="bottom">
+        <span>Next</span><i class="bi bi-arrow-bar-right pl-1"></i>
+      </button>
+    </li>
+  </nav>
+
+</div>

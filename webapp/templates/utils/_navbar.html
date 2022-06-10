@@ -1,0 +1,40 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+
+  <a class="navbar-brand h1" href="{{ url_for('main.index') }}">
+      Prometheus<span style="color:#ff7F2a" class="font-weight-bold">ML</span>
+  </a>
+  
+  <!-- toggle button -->
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  
+  
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+	
+	<!-- position the yailab logo in the center -->
+	<a class="navbar-brand ml-auto">
+	  <img src="{{ url_for('static', filename='logo/logo-final-wt.svg') }}" height="30" alt="">
+	</a>
+  
+	<div class="navbar-nav .navbar-logo ml-auto">
+	  <li class="nav-item active">
+		<a class="nav-link" href="{{ url_for('main.index') }}">Home <span class="sr-only">(current)</span></a>
+	  </li>
+	  <li class="nav-item dropdown">
+		<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		  My account
+		</a>
+		<!-- add `dropdown-menu-right` so that the menu is left-aligned and doesn't go out of screen -->
+		<div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+		  <a class="dropdown-item" href="{{ url_for('main.user') }}">Signed in as: <br> <span class="font-weight-bold">{{ current_user.username }}</span></a>
+		  <div class="dropdown-divider"></div>
+		  <a class="dropdown-item" href="{{ url_for('main.user') }}">Your profile</a>
+		  <a class="dropdown-item" href="{{ url_for('main.projects') }}">Your projects</a>
+		  <div class="dropdown-divider"></div>
+		  <a class="dropdown-item" href="{{ url_for('auth.logout') }}">Sign out</a>
+	   </div>
+	  </li>
+	</div>
+  </div>
+</nav>

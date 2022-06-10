@@ -1,0 +1,106 @@
+{% extends "base_app.html" %}
+
+{% block content %}
+  
+  <div class="row h-100">
+    <div class="col-md-10">
+	  <div class="d-flex flex-column h-100 px-5">
+	    {% block pipeline_nav %}
+		  <div class="row">
+
+            <div class="col-xl-1">
+
+            </div>
+            <div class="col-lg-11 col-xl-10">
+              {% include 'utils/_pipeline_nav.html' %}
+            </div>
+            <div class="col-lg-1 d-flex">
+              <button type="button"
+                      class="btn btn-outline-primary btn-refresh my-auto mx-auto justify-content-center align-items-center"
+                      data-trigger="hover"
+                      data-content="Refresh"
+                      data-placement="bottom">
+                <i class="bi bi-arrow-clockwise pr-1" style="font-size: 1rem;"></i>
+              </button>
+            </div>
+
+		  </div>
+		{% endblock %}
+		
+		<!-- The main content of each page of the app -->
+		{% block page_content %}
+		{% endblock %}
+	  </div>
+	</div>
+	
+	<!-- The sidebar block  -->
+	<div class="col-md-2 bg-dark">
+	  {% block sidebar %}
+	  <div class="container h-100 d-flex flex-column px-0 pb-5">
+	  
+	    <!-- sidebar header -->
+	    {% block sidebar_header %}
+          <h5>{{ project.project_name }}</h5>
+  
+          <!-- Put the margins to 0 to fix the problem inside flexbox -->
+          <hr style="background-color: #ccc; margin-left: 0; margin-right: 0;"/>
+		{% endblock %}
+		
+		<!-- sidebar middle part -->
+		<div class="container h-75 d-flex flex-column justify-content-center">
+		  {% block sidebar_main %}
+		
+		  {% endblock %}
+		</div>
+		
+		<!-- sidebar footer -->
+		<div class="container d-flex justify-content-center mt-auto">
+	      {% block sidebar_footer %}
+		    {% include 'utils/_pipeline_sidebar_footer.html' %}
+		  {% endblock %}
+		</div>
+		
+	  </div>
+	  {% endblock %}
+	  
+	</div>
+  </div>
+  
+  
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<!-- JQuery script to change the active class (it's a patch! change it!) -->
+<script type=text/javascript>
+  {% if current_user.is_authenticated %}
+	$(document).ready(function(){
+		$('#nav_pipe').find('.active').removeClass("active");
+		{% if request.url_rule.endpoint ==  'main.project_input' %}
+	      $('#nav-input').addClass("active");
+	    {% elif request.url_rule.endpoint ==  'main.data_transform' %}
+	      $('#nav-transform').addClass("active");
+	    {% elif request.url_rule.endpoint ==  'main.data_predict' %}
+	      $('#nav-predict').addClass("active");
+        {% endif %}
+	});
+  {% endif %}
+
+  // function for the reload error
+  let beforeUnloadListener = (event) => {
+	if(!window.value) {
+		// event.preventDefault();
+		//reset the global value
+		window.value = false;
+
+		return event.returnValue = "";
+
+	}
+
+  };
+</script>
+
+{% endblock %}

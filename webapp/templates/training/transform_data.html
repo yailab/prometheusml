@@ -1,0 +1,892 @@
+{% extends "training/base_prometheus.html" %}
+
+<!-- The main page content -->
+{% block page_content %}
+
+	<div class="row justify-content-center mb-4">
+
+	  <!-- feature extraction column -->
+	  <div class="col-md-6 d-flex flex-column align-items-center" id="extraction-div">
+
+        <!-- feature extraction card  -->
+	    <div class="card w-50 text-center align-items-center">
+		  <div class="card-body d-flex flex-column align-items-center" id="card-algo-param-update">
+		    <h5 class="card-title pt-1 pb-3 text-center"
+				data-trigger="hover"
+                data-content="Extract information from raw data"
+                data-placement="top">
+                <strong>Feature extraction</strong>
+			</h5>
+			<div class="row">
+		      <div class="col text-left" id="extractionSelectDiv">
+			    <!--radio items -->
+			    <div class="custom-control custom-radio">
+                  {% if project.app_area in ["continuous_prediction", "class_prediction"] %}
+                    <input type="radio" id="radioExtractAuto" name="extractionSelect" class="custom-control-input" disabled>
+                  {% else %}
+                    <input type="radio" id="radioExtractAuto" name="extractionSelect" class="custom-control-input">
+                  {% endif %}
+			      <label class="custom-control-label"
+                         for="radioExtractAuto"
+                         data-trigger="hover"
+                         data-html="true"
+                         data-content="Automatic tuning by Prometheus<span class='text-prometheus'>ML</span>. <br/> <span class='text-prometheus'>This feature is locked</span>."
+                         data-placement="bottom">
+                      Automatic
+                  </label>
+			    </div>
+			    <div class="custom-control custom-radio">
+		          <input type="radio" id="radioExtractManual" name="extractionSelect" class="custom-control-input" disabled>
+			      <label class="custom-control-label"
+						 for="radioExtractManual"
+						 data-trigger="hover"
+						 data-html="true"
+						 data-content="Transform easy the input data.<br/> <span class='text-prometheus'>Feature available in the Cloud version</span>."
+						 data-placement="bottom">
+					  Manual
+				  </label>
+			    </div>
+
+		      </div>
+		    </div>
+		  </div>
+	    </div>
+
+		<!-- transform cards container -->
+		<div class="container d-flex flex-row justify-content-center mt-2">
+
+	      <!-- manual signal card	-->
+	      <div class="card w-50 mt-2 mx-2 d-none" id="manual-signal-card">
+		    <h5 class="card-title pt-3 mx-auto">Signal processing</h5>
+		    <div class="card-body d-flex flex-column align-items-center">
+		      <div class="row">
+		        <div class="col" id="signal-list-div">
+
+		        </div>
+		      </div>
+	        </div>
+	      </div>
+
+	      <!-- manual feature card -->
+	      <div class="card w-50 mt-2 mx-2 d-none" id="manual-feature-card">
+		    <h5 class="card-title pt-3 mx-auto"
+				data-trigger="hover"
+				data-content="Methods of extracting information"
+				data-placement="bottom">
+				Transformations
+			</h5>
+		    <div class="card-body d-flex flex-column align-items-center">
+		      <div class="row">
+		        <div class="col" id="transform-list-div">
+
+		        </div>
+		      </div>
+	        </div>
+	      </div>
+
+	    </div>
+
+        <!-- skip feature extraction row -->
+        {% if project.app_area in ["continuous_prediction", "class_prediction"] %}
+		<div class="row w-75 justify-content-center" id="skipFeatureExtractDiv">
+        {% else %}
+        <div class="row w-75 justify-content-center d-none" id="skipFeatureExtractDiv">
+        {% endif %}
+		  <div class="col-md-6 d-flex justify-content-center">
+		    <!-- Feature engineering button -->
+		    <button type="button"
+                    id="btnSkipFeatureExtract"
+                    class="btn btn-primary btn-skip d-flex my-4 justify-content-center align-items-center"
+					data-trigger="hover"
+                	data-content="Raw data are in good shape"
+                	data-placement="bottom">
+	          <i class="bi bi-skip-forward-fill pr-1" style="font-size: 1.2rem;"></i><span class="my-auto">Skip extraction</span>
+            </button>
+		  </div>
+
+		</div>
+
+		<!-- feature extraction button row -->
+		<div class="row w-75 justify-content-center d-none" id="btnFeatureExtractDiv">
+		  <div class="col-md-6 d-flex justify-content-center">
+		    <!-- Feature engineering button -->
+		    <button type="button" id="btn-feature-extract"
+                    class="btn btn-primary d-flex my-4 justify-content-center align-items-center">
+	          <i class="bi bi-play-fill pr-1" style="font-size: 1.2rem;"></i><span>Extract features</span>
+            </button>
+		  </div>
+
+		</div>
+
+		<!-- error message div -->
+	    <div class="row text-center text-danger d-none" id="errorDiv">
+          <h5 id="errorMessage"></h5>
+	    </div>
+
+	  </div>
+
+
+
+	  <!-- feature selection column -->
+	  <div class="col-md-6 d-none flex-column align-items-center" id="selection-div">
+
+	    <!-- feature selection card  -->
+	    <div class="card text-center align-items-center w-50 mt-2 mx-2" id="card-feature-selection">
+		  <div class="card-body d-flex flex-column align-items-center">
+		    <h5 class="card-title pt-1 pb-3"
+				data-trigger="hover"
+				data-content="Select relevant information for the model"
+				data-placement="top">
+				<strong>Feature selection</strong>
+			</h5>
+			<div class="row">
+		      <div class="col text-left">
+			    <!--radio items -->
+			    <div class="custom-control custom-radio">
+			      <input type="radio" id="radioAutoSelection" name="FeatureSelect" class="custom-control-input" disabled>
+			      <label class="custom-control-label"
+                         for="radioAutoSelection"
+                         data-trigger="hover"
+                         data-html="true"
+                         data-content="Automatic selection by Prometheus<span class='text-prometheus'>ML</span>. <br/> <span class='text-prometheus'>This feature is locked</span>."
+                         data-placement="bottom">
+                    Automatic
+                  </label>
+			    </div>
+			    <div class="custom-control custom-radio">
+			      <input type="radio" id="radioManualSelection" name="FeatureSelect" class="custom-control-input">
+			      <label class="custom-control-label" for="radioManualSelection">Manual</label>
+			    </div>
+		      </div>
+		    </div>
+		  </div>
+	    </div>
+
+        <!-- manual selection card -->
+	    <div class="card w-50 mt-2 mx-2 d-none" id="manual-selection-card">
+		  <h5 class="card-title pt-3 mx-auto"
+              data-trigger="hover"
+              data-content="Methods of ranking features"
+              data-placement="bottom">
+				Ranking
+			</h5>
+		    <div class="card-body d-flex flex-column align-items-center">
+		      <div class="row">
+		        <div class="col" id="selection-algo-list-div">
+
+		        </div>
+		      </div>
+	        </div>
+	      </div>
+
+		<!-- Feature selection button -->
+		<button type="button" id="btnFeatureSelection"
+				class="btn btn-primary my-4 mx-auto"
+				disabled>
+	      <i class="bi bi-play-fill pr-1" style="font-size: 1.2rem;"></i><span class="my-auto" id="btnSelectionText">Select features</span>
+        </button>
+
+		<!-- feature selection image placeholder -->
+		<div class="container-fluid text-center my-2">
+		  <img src=""
+			   class="rounded img-fluid w-100 d-none" id="imgSelection" alt="Not available">
+		</div>
+
+		<!-- Range slider -->
+		<div class="container d-none w-50 my-5" id="RangeContainer">
+		  <label for="rangeInput">Select no. of top features: <span id="rangeLabelSpan"></span></label>
+          <input type="range" class="custom-range" min="1" max="10" id="rangeInput">
+		</div>
+
+	  </div>
+
+	</div>
+
+
+	<div class="row justify-content-center align-items-center">
+	  <div class="col-md-8 h-100 d-flex flex-column justify-content-center">
+
+		<!-- The task description -->
+		<span class="pb-1" id="transform-progress-info" style="display: none;">
+
+		</span>
+		<!-- The progress bar -->
+		<div class="progress" id="transform-progress" style="height: 1.5rem; display: none;" aria-describedby="progress-info">
+		  <div class="progress-bar" id="transform-progressbar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100"></div>
+		</div>
+	
+	  </div>
+	</div>	  
+
+
+{% endblock %}
+
+
+<!-- Sidebar content -->
+{% block sidebar_main %}
+
+<button type="button"
+        class="btn btn-primary btn-stop mb-auto justify-content-center align-items-center d-none">
+  <i class="bi bi-stop-fill pr-1" style="font-size: 1.2rem;"></i><span>Stop</span>
+</button>
+
+<button type="button"
+        id="btnSideSkipFeatureExtract"
+        class="btn btn-primary btn-skip mb-auto justify-content-center align-items-center d-none">
+  <i class="bi bi-skip-forward-fill pr-1" style="font-size: 1.2rem;"></i><span>Skip step</span>
+</button>
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<script type=text/javascript>
+const progress_info = $("#transform-progress-info")
+const progressbar = $("#transform-progressbar")
+const progressDiv = $("#transform-progress")
+let clicked_btn_id = '';
+
+  // function to stop the running task
+  $(function() {
+    $('.btn-stop').bind('click', function(ev) {
+	  // Prevent the default submit action
+	  ev.preventDefault();
+
+	  // Stop the task
+	  $.post({
+		url: {{ url_for('main.stop_job')|tojson }}
+	  })
+	  .done(function(data_stop) {
+		progress_info.text(data_stop.message);    // Update the progressbar
+		$(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+
+        if( clicked_btn_id === 'btn-feature-extract' ) {
+          $("#btnFeatureExtractDiv").removeClass("d-none");  // show the buttons
+          $("#btn-feature-extract").prop("disabled", false);  // enable extract button
+          $("input.transform-input").prop("disabled", false);  // enable the card inputs
+          $("#btnSideSkipFeatureExtract").removeClass("d-none").addClass("d-flex");  // show side skip button
+        } else if ( clicked_btn_id === 'btnSkipFeatureExtract' ) {
+          $("#btnFeatureExtractDiv").removeClass("d-none");  // show the buttons
+          $(".btn-skip").prop("disabled", false);  // enable skip buttons
+        } else if ( clicked_btn_id === 'btnSideSkipFeatureExtract' ) {
+          $("#btnFeatureExtractDiv").removeClass("d-none");  // show the buttons
+          $("#btn-feature-extract").removeClass("d-none").addClass("d-flex");
+          $(".btn-skip").prop("disabled", false);  // enable skip buttons
+          $("#btnSideSkipFeatureExtract").removeClass("d-none").addClass("d-flex");  // show side skip button
+        } else if ( clicked_btn_id === 'btnFeatureSelection' ) {
+          $('#btnFeatureSelection').prop('disabled', false);
+        }
+        intervals.forEach(clearInterval);  // stop running interval for progress bar
+
+	  })
+	  .fail(function(data_stop) {
+		// Show the error message
+		$("#errorDiv").removeClass("d-none");
+		$("#errorMessage").text(data_stop.errorMessage);
+      });
+
+    });
+  });
+
+
+// skip feature extraction
+$(".btn-skip").on("click", function () {
+  clicked_btn_id = this.id; // get the id of the clicked button
+  $(this).prop('disabled', true);  // disable button
+  $(this).popover('hide');  // hide the popover
+  $("#btnSideSkipFeatureExtract").addClass("d-none").removeClass("d-flex");  // hide the side skip button
+  $(".btn-stop").removeClass("d-none").addClass("d-flex");  // show the stop button
+
+  // Show that the progress text
+  progress_info.show();
+  progress_info.text("Prometheus is skipping feature extraction...");
+  // Show the progress bar
+  progressDiv.show();
+  set_bar(0);
+  update_bar(50);
+
+  // the feature extraction button
+  $("#btn-feature-extract").addClass("d-none").removeClass("d-flex");
+
+  // get the list of selected transformations
+  let selected_transforms = [];
+  $('#transform-list-div input:checked').each(function() {
+    selected_transforms.push($(this).attr('id'));
+  });
+
+  // get the list of selected signals
+  let selected_signals = [];
+  $('#signal-list-div input:checked').each(function() {
+    selected_signals.push($(this).attr('id'));
+  });
+
+  $.ajax({
+	  url: {{ url_for('main.skip_feature_extraction', project_id=project.id, use_type="training")|tojson }},
+	  type: "POST",
+      data: JSON.stringify({
+          'selected_signals': selected_signals,
+          'selected_transforms': selected_transforms
+      }),
+      dataType: "json",
+      contentType: "application/json; charset=utf-8",
+	})
+    .done(function(res) {
+        // run the function recursively to check the status
+        (function checkStatus(taskID) {
+          $.ajax({
+            url: `/tasks/${taskID}/status`,
+            method: 'GET',
+          })
+          .done((res) => {
+            const taskStatus = res.data.task_status;
+            console.log(taskStatus);
+
+            switch (taskStatus) {
+              case "unknown":
+                progress_info.text("Skipping feature extraction has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              case "finished":
+                // show that the task was completed
+                progress_info.text("Prometheus skipped feature extraction!");
+                set_bar_stop(100);
+                // show the selection part
+                $("#selection-div").removeClass("d-none").addClass("d-flex");
+                $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+                break;
+              case "failed":
+                progress_info.text("Skipping feature extraction has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+                break;
+              case "stopped":
+                $(this).prop('disabled', false);
+                break;
+              default:
+                // queued/started/deferred
+                setTimeout(function() {
+                  checkStatus(res.data.task_id);
+                }, 5000);
+            }
+          })
+          .fail((err) => {
+            console.log(err);
+          });
+        })(res.data.task_id)
+
+	})
+    .fail(function() {
+      set_bar_stop(0);
+      console.log( "error in skipping features" );
+    });
+})
+
+
+
+// function when the feature extraction button is pushed
+$(function() {
+  $('#btn-feature-extract').bind('click', function(ev) {
+    clicked_btn_id = this.id; // get the id of the clicked button
+	ev.preventDefault();  // Prevent the default submit action
+    $(".btn-skip").addClass("d-none").removeClass("d-flex");  // remove the skip feature extraction button
+    $(this).prop('disabled', true);  // disable button
+
+	// in case the have selected to run the manual method
+	if ($("#radioExtractManual").is(':checked')) {
+
+	  // check that the user has selected at least one transformation
+	  if ($("#manual-feature-card input:checked").length < 1){
+	  	console.log('No feature selected')
+	    // Show that the progress has started
+	    progress_info.show();
+	    progress_info.text('You need to have at least one feature selected!');
+
+	    // Show the progress bar with a red colour
+	    progress_info.show();
+	    progressDiv.show();
+	    progressbar.addClass('bg-danger');
+	    progressbar.css({ "width": "100%" });
+	    progressbar.text("0%");
+	    // enable the button
+        $(this).prop('disabled', false);
+	  }
+	  // when the user has selected feature transformations
+	  else {
+	  	// get the list of selected transformations
+	    let selected_transforms = [];
+	    $('#transform-list-div input:checked').each(function() {
+	  	  selected_transforms.push($(this).attr('id'));
+	    });
+
+	    // get the list of selected signals
+	    let selected_signals = [];
+	    $('#signal-list-div input:checked').each(function() {
+	  	  selected_signals.push($(this).attr('id'));
+	    });
+
+	    // Show that the progress has started
+	    progress_info.show();
+	    // Reset the progress bar when user re-clicks it
+	    progressDiv.show();
+	    set_bar(0);
+        update_bar(50);
+
+	    // POST it to the server
+	    $.ajax({
+            url: {{ url_for('main.run_manual_transform', project_id=project.id)|tojson }},
+            type: "POST",
+            data: JSON.stringify({
+                'selected_signals': selected_signals,
+                'selected_transforms': selected_transforms
+            }),
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+        })
+        .done(function(res){
+          // show initial message from server
+          progress_info.text(res.info);
+          console.log(res.pipeline); // show updated pipeline
+
+          // Hide the extraction button and show the stop button
+		  $("#btnFeatureExtractDiv").addClass("d-none");
+		  $(".btn-stop").removeClass("d-none").addClass("d-flex");
+
+		  // disable the card inputs
+          $("input.transform-input").prop("disabled", true);
+
+          // run the function recursively to check the status
+          (function checkStatus(taskID) {
+            $.ajax({
+              url: `/tasks/${taskID}/status`,
+              method: 'GET',
+            })
+            .done((res) => {
+              const taskStatus = res.data.task_status;
+              console.log(taskStatus);
+
+              switch (taskStatus) {
+                case "unknown":
+                  progress_info.text("Feature extraction has failed... Unknown error (contact yaiLab)");
+                  $(this).prop('disabled', false);
+                  break;
+                case "finished":
+                  // show that the task was completed
+                  progress_info.text("Prometheus completed feature extraction!");
+                  set_bar_stop(100);
+
+                  // show the selection part
+                  $("#selection-div").removeClass("d-none").addClass("d-flex");
+				  // hide the stop button
+				  $(".btn-stop").addClass("d-none").removeClass("d-flex");
+
+                  // disable the radio when it is pressed
+                  $("#radioExtractAuto").attr("disabled", true);
+                  $("#radioExtractManual").attr("disabled", true);
+
+                  break;
+                case "failed":
+                  progress_info.text("Feature extraction has failed... Unknown error (contact yaiLab)");
+                  $(this).prop('disabled', false);
+                  $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+                  break;
+                case "stopped":
+                  $(this).prop('disabled', false);
+                  break;
+                default:
+                  // queued/started/deferred
+                  setTimeout(function() {
+                    checkStatus(res.data.task_id);
+                  }, 5000);
+              }
+            })
+            .fail((err) => {
+              console.log(err);
+            });
+          })(res.data.task_id)
+
+        })
+        .fail(function(res){
+          set_bar_stop(0);
+        });
+
+	  }
+	}
+
+	// in case they have selected the automatic
+	if ($("#radioExtractAuto").is(':checked')) {
+	  console.log('the auto option has been called');
+	  // Show that the progress has started
+	  progress_info.show();
+	  progress_info.text("Prometheus can't do that right now ... do it the hard way (manual)");
+	  progress_info.css({ "color": '#ff7F2a'});
+
+	  // Reset the progress bar when user re-clicks it
+	  progressDiv.show();
+	  set_bar(0);
+	  update_bar(50);
+
+	}
+
+  });
+});
+
+
+// function when the feature selection button is pushed
+$(function() {
+	$('#btnFeatureSelection').bind('click', function (ev) {
+		ev.preventDefault();  // Prevent the default submit action
+		$(this).prop('disabled', true);  // disable the button
+		clicked_btn_id = this.id; // get the id of the clicked button
+        $("#btnSideSkipFeatureExtract").addClass("d-none").removeClass("d-flex");
+
+		// show the stop button
+        $(".btn-stop").removeClass("d-none").addClass("d-flex");
+
+		// in case the have selected to run the manual method
+	    if ($("#radioManualSelection").is(':checked')) {
+		  // Show that the progress has started
+	      progress_info.text('Sit back and relax, Prometheus is ranking your features...');
+	      // Reset the progress bar when user re-clicks it
+	      progressDiv.show();
+	      set_bar(0);
+	      update_bar(50);
+
+		  // run the feature selection
+		  $.post({
+            url: {{ url_for('main.feature_ranking', project_id=project.id)|tojson }},
+          })
+          .done(function(res) {
+            console.log(res.pipeline);
+            // disable the buttons
+            $("#radioManualSelection").prop('disabled', true);
+            $("#radioAutoSelection").prop('disabled', true);
+
+            // run the function recursively to check the status
+            (function checkStatus(taskID) {
+              $.ajax({
+                url: `/tasks/${taskID}/status`,
+                method: 'GET',
+              })
+              .done((res) => {
+                const taskStatus = res.data.task_status;
+                console.log(taskStatus);
+
+                switch (taskStatus) {
+                  case "unknown":
+                    progress_info.text("Feature ranking has failed... Unknown error (contact yaiLab)");
+                    $(this).prop('disabled', false);
+                    break;
+                  case "finished":
+                    $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+
+                    $.ajax({
+                      url: `/tasks/${taskID}/result`,
+                      method: 'GET',
+                    })
+                    .done((res) => {
+                      if (res.status === "success"){
+                        // show that the task was completed
+                        progress_info.text("Prometheus completed feature ranking!");
+                        set_bar_stop(100);
+
+                        // update the slider range (max)
+                        const no_features = res.data.task_result[0];
+                        const rangeElem = $("#rangeInput");
+                        rangeElem.attr("max", no_features);
+                        rangeElem.val(Math.ceil(no_features/2))
+
+						// fetch the image
+						const imgSelection = $("#imgSelection");
+						$.get({
+						  url: {{ url_for('main.get_img_src', project_id=project.id, pipe_step="ranking", fig_type="None", model_type="None")|tojson }},
+						})
+						.done((data) => {
+						  const svg = data.img_svg;
+						  let blob = new Blob([svg], {type: 'image/svg+xml'});
+						  let img_url = URL.createObjectURL(blob);
+                          imgSelection.attr("src", img_url);
+						})
+						.fail((err) => {
+						  imgSelection.attr("alt", "Couldn't load ranking image");
+                        });
+
+                        // show the image and the slider
+                        imgSelection.removeClass("d-none")
+                        $("#RangeContainer").removeClass("d-none")
+
+                        // remove the selection card and button
+                        $("#btnFeatureSelection").addClass("d-none");
+                        $("#card-feature-selection").addClass("d-none");
+                        $("#manual-selection-card").addClass("d-none");
+
+                        // make the next page available to the user
+                        $(".btn-next").removeClass("d-none");
+
+                        // sent list of ranked features to the server
+                        $.ajax({
+                          url: {{ url_for('main.set_ranked_features', project_id=project.id)|tojson }},
+                          type: "POST",
+                          data: JSON.stringify({
+                              'ranked_feature_list': res.data.task_result[1]
+                          }),
+                          dataType: "json",
+                          contentType: "application/json; charset=utf-8"
+                        }).done(function(data) {
+                          console.log(data.message);
+                        })
+                        .fail((err) => {
+                          console.log(err);
+                        });
+
+                      } else {
+                        progress_info.text("Prometheus couldn't get the predictions (contact yaiLab");
+                        set_bar_stop(0);
+                      }
+
+                    })
+                    .fail((err) => {
+                      console.log(err);
+                    });
+
+                    break;
+                  case "failed":
+                    progress_info.text("Feature ranking has failed... Unknown error (contact yaiLab)");
+                    $(this).prop('disabled', false);
+                    $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+                    break;
+                  case "stopped":
+                    $(this).prop('disabled', false);
+                    break;
+                  default:
+                    // queued/started/deferred
+                    setTimeout(function() {
+                      checkStatus(res.data.task_id);
+                    }, 5000);
+                }
+              })
+              .fail((err) => {
+                console.log(err);
+              });
+            })(res.data.task_id)
+
+		  })
+          .fail(function(){
+            progress_info.text("Feature ranking has failed... Unknown error (contact yaiLab)");
+            set_bar_stop(0);
+          });
+
+		}
+
+	    // in case the have selected to run the automatic method
+	    if ($("#radioAutoSelection").is(':checked')) {
+          // TODO: Add automatic
+		}
+
+	});
+});
+
+// function when the user moves to the algorithm step
+$(document).ready(function() {
+  $(".btn-next").click(function(){
+  	// set global value so it skips the check on pafe refresh
+  	window.value = true;
+
+  	// read the users' selected no of top features
+	let slider = document.getElementById("rangeInput");
+	let no_top_features_user_selected = Number(slider.value);
+
+	// sent the number to the server
+	$.ajax({
+	  url: {{ url_for('main.set_top_features', project_id=project.id)|tojson }},
+	  type: "POST",
+	  data: JSON.stringify({
+          'no_top_features_user_selected': no_top_features_user_selected
+	  }),
+	  dataType: "json",
+      contentType: "application/json; charset=utf-8",
+	  success: function(data){
+	  	console.log(data.status);
+	  }
+	}).done(function() {
+	  // when successful go to the next stage
+	  location.href = {{ url_for('main.algorithm_update', project_id=project.id)|tojson }};
+	});
+
+  });
+});
+
+
+// function that runs the logic when manual feature extraction is selected
+// two listeners on load of the page and on change
+$(document).ready(function() {
+  $("#radioExtractManual").on("change", function () {
+    if(this.checked){
+      // $("#btnFeatureExtractDiv").addClass("d-none");
+      console.log('the manual has been called');
+
+      progress_info.hide();
+      progressDiv.hide();
+      progress_info.css({ "color": 'white'});
+
+      // Return the available transformations from the server
+      $.post({
+        url: {{ url_for('main.get_transform_list', project_id=project.id)|tojson }},
+      })
+      .done(function(data) {
+        // populate the data
+        var transform_arr = data.transform_list
+        var signal_arr = data.signal_list
+        // clear all child nodes from the div.
+        $("#signal-list-div").empty();
+        $("#transform-list-div").empty();
+
+        // signal list not available in general templates
+        {% if project.app_area not in ["continuous_prediction", "class_prediction"] %}
+            // iterate through the available signals
+            for (let i in signal_arr) {
+              let parentDiv = document.getElementById("signal-list-div");
+              let checkboxDiv = create_checkbox_item(signal_arr[i]['id'],
+                  signal_arr[i]['label'], signal_arr[i]['checked'],
+                  signal_arr[i]['disabled'], "signal-input"
+              )
+
+              // append the checkbox div in the DOM
+              parentDiv.appendChild(checkboxDiv);
+            }
+        {% endif %}
+
+        // iterate through the available feature transformations
+        for (let i in transform_arr) {
+          let parentDiv = document.getElementById("transform-list-div");
+          let checkboxDiv = create_checkbox_item(
+              id=transform_arr[i]['id'],
+              label=transform_arr[i]['label'],
+              checked=transform_arr[i]['checked'],
+              disabled=transform_arr[i]['disabled'],
+              class_name="transform-input",
+              description=transform_arr[i]['description'],
+              desc_placement="right"
+          )
+
+          // append the checkbox div in the DOM
+          parentDiv.appendChild(checkboxDiv);
+        }
+
+        $('[data-trigger="hover"]').popover();  // initialise again the popovers to include the generated ones
+
+
+        // show the signal card
+        {% if project.app_area not in ["continuous_prediction", "class_prediction"] %}
+            $("#manual-signal-card").removeClass("d-none");
+        {% else %}
+            // show the transformations card
+            $("#manual-feature-card").removeClass("d-none");
+        {% endif %}
+      })
+      .fail(function(data) {
+        console.log("Couldn't get the available transformations!");
+      });
+    }
+  });
+  $('#radioExtractManual').trigger('change');
+});
+
+
+$(document).on('change','#manual-signal-card input',function() {
+  if ($("#manual-signal-card input:checked").length > 0) {
+    // any one is checked
+    $("#manual-feature-card").removeClass("d-none");
+  }
+  else {
+    // none is checked
+    $("#manual-feature-card").addClass("d-none");
+  }
+});
+
+$(document).on('change','#radioAuto',function() {
+     if(this.checked){
+        $("#manual-signal-card").addClass("d-none");
+        $("#manual-feature-card").addClass("d-none");
+
+        console.log('the auto has been called');
+     }
+});
+
+</script>
+
+
+<script type="text/javascript">
+  // function that runs the logic when manual feature selection is selected
+  $(document).on('change','#radioManualSelection',function() {
+  	if(this.checked) {
+  	  console.log('the manual feature selection is called')
+	  // update and enable the selection button
+	  $("#btnSelectionText").text("Rank features");
+  	  $("#btnFeatureSelection").attr("disabled", false);
+  	  // add the ranking method
+      let parentDiv = document.getElementById("selection-algo-list-div");
+      let radioDiv = create_radio_item(id="rf_rank", label="Tree-based",
+          name="radioRanking", checked=true, disabled=false,
+          description="feature importance of a random forest (mean decrease in impurity)",
+          desc_placement="right"
+      )
+
+      parentDiv.appendChild(radioDiv);  // append the checkbox div in the DOM
+      $('[data-trigger="hover"]').popover();  // initialise again the popovers to include the generated ones
+      $("#manual-selection-card").removeClass("d-none");  // show the card
+	}
+  });
+
+</script>
+
+<script type="text/javascript">
+  // function that runs the logic when manual feature selection is selected
+  $(document).on('change','#radioAutoSelection',function() {
+  	if(this.checked) {
+  	  console.log('the auto feature selection is called')
+	  $("#btnSelectionText").text("Select features");
+	  $("#RangeContainer").addClass("d-none");
+	  // disable the selection button
+	  $("#btnFeatureSelection").attr("disabled", true);
+	}
+  });
+
+</script>
+
+<script type="text/javascript">
+  // function shows the number of features selected
+  let slider = document.getElementById("rangeInput");
+  let output = document.getElementById("rangeLabelSpan");
+  // output.innerHTML = slider.value; // Display the default slider value
+
+  // Update the current slider value (each time you drag the slider handle)
+  slider.oninput = function() {
+    output.innerHTML = this.value;
+    output.style.color = '#ff7F2a';
+  }
+</script>
+
+<script type="text/javascript">
+  window.onbeforeunload = function () {
+    if(!window.value) {
+      return '';
+    }
+  };
+</script>
+
+<script type="text/javascript">
+// toggle between the buttons when they are selected or manual and auto are selected
+$("#radioExtractManual, #radioExtractAuto").on("click", function () {
+  $("#btnFeatureExtractDiv").removeClass("d-none");
+  $("#btn-feature-extract").addClass("d-flex").removeClass("d-none");
+  $("#skipFeatureExtractDiv").addClass("d-none");
+  {% if project.app_area in ["continuous_prediction", "class_prediction"] %}
+    $("#btnSideSkipFeatureExtract").removeClass("d-none").addClass("d-flex");
+  {% endif %}
+})
+
+</script>
+
+{% endblock %}

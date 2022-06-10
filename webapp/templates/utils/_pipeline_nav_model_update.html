@@ -1,0 +1,38 @@
+<!-- Set the necessary urls -->
+{% set input_url = url_for('main.project_input_update', project_id=project.id) %}
+{% set transform_url = url_for('main.data_transform_update', project_id=project.id) %}
+{% set ai_algo_url = url_for('main.algorithm_update', project_id=project.id) %}
+{% set validate_url = url_for('main.model_validate_update', project_id=project.id) %}
+{% set update_url = url_for('main.model_update', project_id=project.id) %}
+
+
+<div class="container px-5 px-md-0 px-xl-5">
+
+  <nav class="nav nav-pills flex-column flex-sm-row py-3 justify-content-center" id="nav_pipe">
+    <li class="nav-item custom-navitem">
+      <a class="nav-link mx-2 my-2 text-center" id="nav-input" href="{{ input_url }}">Input data</a>
+    </li>
+	<li class="nav-item custom-navitem">
+      <a class="nav-link mx-2 my-2 text-center" id="nav-transform" href="{{ transform_url }}">Data preparation</a>
+    </li>
+    <li class="nav-item custom-navitem">
+      <a class="nav-link mx-2 my-2 text-center" id="nav-algorithm" href="{{ ai_algo_url }}">AI model</a>
+    </li>
+    <li class="nav-item custom-navitem">
+      <a class="nav-link mx-2 my-2 text-center" id="nav-validation" href="{{ validate_url }}">Validation</a>
+    </li>
+    <li class="nav-item custom-navitem">
+      <a class="nav-link mx-2 my-2 text-center disabled" id="nav-deploy" href="{{ update_url }}">Deploy model</a>
+    </li>
+    <li class="nav-item custom-navitem">
+      <button type="button"
+              class="btn btn-block btn-primary mx-2 my-2 btn-next d-none"
+              data-trigger="hover"
+              data-content="Next step"
+              data-placement="bottom">
+        <span>Next</span><i class="bi bi-arrow-bar-right pl-1"></i>
+      </button>
+    </li>
+  </nav>
+
+</div>

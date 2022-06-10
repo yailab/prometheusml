@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_field %}
+t
+{% block content %}
+    <div class="row h-100 justify-content-center">
+      <div class="col-12 col-md-6 col-xl-5 d-flex flex-column justify-content-center align-items-center">
+        <div class="container d-flex flex-column">
+          <h3 class="pb-4">Register to meet Prometheus<span style="color: #ff7F2a">ML</span></h3>
+          <!-- render form using Bootstrap-Flask -->
+          <form method="post" id="FormRegister" novalidate>
+            {{ form.csrf_token() }}
+            {{ render_field(form.username) }}
+            {{ render_field(form.email) }}
+            {{ render_field(form.password) }}
+            {{ render_field(form.password2) }}
+            {{ render_field(form.recaptcha) }}
+            <div class="col-12 px-2 px-0">
+              {{ render_field(form.newsletter) }}
+              {{ render_field(form.discord) }}
+            </div>
+            {{ render_field(form.submit, id="btnRegister") }}
+          </form>
+
+          <div class="row ml-auto pt-4 pr-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  {%  if category == 'error' %}
+                    <p class="text-danger">
+                      {{message}}<i class="bi bi-exclamation-triangle pl-2"></i>
+                    </p>
+                  {% elif category == 'success' %}
+                    <p class="text-success">
+                      {{message}}<i class="bi bi-exclamation-triangle pl-2"></i>
+                    </p>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+          </div>
+          <p class="pt-2 text-center">
+            You agree to our
+              <a href="{{ url_for('auth.get_data_policy') }}" target='_blank' rel='noopener noreferrer'>
+                  Privacy Policy
+              </a>
+               and
+              <a href="{{ url_for('auth.get_terms') }}" target='_blank' rel='noopener noreferrer'>
+                  Terms and Conditions
+              </a>.
+          </p>
+          <p class="pt-4">
+            Already have an account?
+            <a href="{{ url_for('auth.login') }}">Log in!</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <! -- Ethics Modal -->
+    <div class="modal" tabindex="-1" role="dialog" id="ethicsModal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Ethics policy</h5>
+          </div>
+          <div class="modal-body">
+            <div class="row pt-5 justify-content-center">
+              <div class="col-md-10 col-12">
+                <div class="row px-3 justify-content-center">
+                  <blockquote class="blockquote pb-5">
+                    <p class="mb-0">First, do no harm (<em>ὠφελέειν ἢ μὴ βλάπτειν</em>)</p>
+                    <footer class="blockquote-footer">
+                        Hippocrates <cite title="Source Title">Epidemics</cite>
+                    </footer>
+                  </blockquote>
+                </div>
+                <div class="row justify-content-center">
+                  <div class="col-md-10 col-lg-8 col-12">
+
+                    <h5>
+                      At y<span class="text-prometheus">ai</span>Lab we <span class="text-prometheus">democratise</span> AI
+                      and believe in responsible AI use. Whilst we are super excited about AI’s ability to help
+                      humanity. We are committed to <span class="text-prometheus">Ethical</span>
+                      and <span class="text-prometheus">Responsible</span> AI.
+                    </h5>
+
+                    <h5 class="pt-4 pb-3">
+                      Every entity using all of y<span class="text-prometheus">ai</span>Lab’s products
+                      and services is <span class="text-prometheus">bound to adhere</span> to the following:
+                    </h5>
+
+                    <ol style="font-size: 1.2rem;">
+                      <li class="pb-4">
+                          I will not develop or use AI to harm, discriminate, or oppress.
+                      </li>
+                      <li class="pb-4">
+                        I will not develop or use AI to develop autonomous, nuclear, biological,
+                        chemical, or other weapons.
+                      </li>
+                      <li class="pb-4">
+                        I will never develop or use AI for medical malpractice
+                        or malicious genetic alterations.
+                      </li>
+                      <li class="pb-4">
+                        I will never develop or use AI against life anywhere in the universe.
+                      </li>
+                      <li class="pb-4">
+                        I will assess the consequences and implications of using AI on life
+                        anywhere in the universe.
+                      </li>
+                      <li class="pb-4">
+                        I am accountable for the moral implications of AI’s use, misuse, and actions,
+                        and I have a responsibility and an opportunity to shape those implications.
+                      </li>
+                    </ol>
+
+
+                  </div>
+                </div>
+
+
+              </div>
+
+            </div>
+          </div>
+          <div class="modal-footer">
+            <a type="button" class="btn btn-secondary" href="{{ url_for('auth.login') }}">Leave</a>
+            <button type="submit" id="btnCloseModal"
+                    form="FormRegister" class="btn btn-primary">Agree and register
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+  {{ super() }}
+
+  <script type=text/javascript>
+    $(function() {
+      $('#btnRegister').click(function(ev){
+        ev.preventDefault();
+        console.log(ev)
+        // Prevent the default submit action
+        $('#ethicsModal').show();
+
+      });
+    });
+
+    $( "#btnCloseModal" ).click(function() {
+        $('#ethicsModal').hide();
+      });
+  </script>
+{% endblock %}

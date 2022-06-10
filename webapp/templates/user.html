@@ -1,0 +1,35 @@
+{% extends "base_app.html" %}
+
+{% block content %}
+  
+  <div class="row p-5">
+    <div class="col-md-3 col-xs-8 d-flex flex-column">
+	  <!-- avatar image -->
+	  <img src="{{ current_user.avatar(512) }}" class="rounded-circle img-fluid img-thumbnail">
+	  <!-- username -->
+	  <h4 class="py-4">{{ current_user.username }}</h4>
+	  
+	  <span class="pb-4"><i class="bi bi-envelope" style="font-size: 1rem;"></i> {{ current_user.email }}</span>
+	</div>
+	
+	<div class="col-lg-9 d-flex flex-column">
+	  <div class="container-fluid">
+	    <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a class="nav-link active">Projects</a>
+          </li>
+        </ul>
+		
+		<!-- iterate projects to create all the cards --> 
+		{% for project in projects %}
+		   {% include 'utils/_projects.html' %}
+        {% endfor %}
+	  
+	  </div>
+	</div>
+  </div>
+  
+  
+  
+  
+{% endblock %}

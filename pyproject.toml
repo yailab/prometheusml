@@ -1,0 +1,13 @@
+[tool.isort]
+profile = 'black'
+
+
+[tool.mypy]
+# https://mypy.readthedocs.io/en/stable/config_file.html#using-a-pyproject-toml-file
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "/home/prometheus/prometheusml/prometheus/stubs"
+# Enable numpy mypy plugin.
+plugins = [
+  "numpy.typing.mypy_plugin"
+]

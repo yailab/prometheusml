@@ -1,0 +1,54 @@
+<!-- reuse the project cards in our pages too -->
+{% set project_page = url_for('main.project_input', project_id=project.id) %}
+{% set update_page = url_for('main.project_input_update', project_id=project.id) %}
+
+<div class="row justify-content-around pt-4">
+  <div class="col-md-6">
+
+	<!-- project card -->
+	<div class="card bg-secondary">
+	  <div class="card-body d-flex flex-column">
+		<h5 class="card-title">{{ project.project_name }}</h5>
+		<p class="card-text">Asset: {{ project.asset }}, Application: {{ project.app_area }}, Algorithm:  {{ project.algorithm }}</p>
+
+		<div class="row">
+
+		  <div class="col-md-6 d-flex justify-content-center">
+            {% if project.algorithm is none %}
+              <a type="button" href="{{ project_page }}" id="btn-inference-pipeline"
+                 class="btn btn-primary d-flex justify-content-center align-items-center disabled">
+                <i class="bi bi-activity pr-1" style="font-size: 1.2rem;"></i> Make prediction
+              </a>
+            {% else %}
+              <a type="button" href="{{ project_page }}" id="btn-inference-pipeline"
+                 class="btn btn-primary d-flex justify-content-center align-items-center">
+                <i class="bi bi-activity pr-1" style="font-size: 1.2rem;"></i> Make prediction
+              </a>
+            {% endif %}
+		  </div>
+		  <div class="col-md-6 d-flex justify-content-center">
+            {% if project.algorithm is none %}
+              <a type="button" href="{{ update_page }}" id="btn-update-pipeline"
+                 class="btn btn-primary d-flex justify-content-center align-items-center">
+                <i class="bi bi-arrow-up-square pr-1" style="font-size: 1.2rem;"></i> Build model
+              </a>
+            {% else %}
+              <a type="button" href="{{ update_page }}" id="btn-update-pipeline"
+                 class="btn btn-primary d-flex justify-content-center align-items-center">
+                <i class="bi bi-arrow-up-square pr-1" style="font-size: 1.2rem;"></i> Rebuild model
+              </a>
+            {% endif %}
+
+		  </div>
+
+		</div>
+	  </div>
+
+	  <!-- <div class="card-footer text-muted"> -->
+        <!-- {{ project.timestamp }} -->
+      <!-- </div> -->
+
+	</div>
+
+  </div>
+</div>

@@ -1,0 +1,9 @@
+<!-- Set the necessary urls -->
+
+{% if request.url_rule.endpoint ==  'main.model_validate_update' %}
+  <button type="button" id="btn-launch" class="btn btn-block btn-primary m-auto d-none">
+    <span>Launch your model</span>
+    <i class="bi bi-cloud-upload pl-1" style="font-size: 1.2rem;"></i>
+  </button>
+{% endif %}
+

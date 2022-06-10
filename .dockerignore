@@ -1,0 +1,20 @@
+# Ignore everything
+*
+
+# Include dependencies and source
+!Pipfile
+!Pipfile.lock
+!configs/
+!webapp/
+!migrations/
+!prometheus/
+!prometheusML.py
+!config.py
+!boot.sh
+
+# Dev config files
+!.flake8
+!pyproject.toml
+
+!prometheus/stubs
+!htmlcov

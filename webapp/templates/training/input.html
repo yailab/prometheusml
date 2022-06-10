@@ -1,0 +1,615 @@
+{% extends "training/base_prometheus.html" %}
+
+{% block page_content %}
+
+  <!-- error message div -->
+  <div class="row my-2 justify-content-center text-center text-danger d-none" id="errorDiv">
+    <h5 id="errorMessage"></h5>
+  </div>
+
+  <div class="row justify-content-around">
+
+    <!-- application area card -->
+    <div class="col-md-auto">
+	<div class="card d-none" id="app-card">
+	  <h5 class="card-title pt-3 mx-auto">Selected application</h5>
+	  <div class="card-body d-flex justify-content-center pt-1">
+		<div class="row px-0">
+
+		  <div class="col-12">
+            <!-- app area part -->
+			<div class="row justify-content-center">
+              <div class="col-md-11" id="app-area-row">
+              </div>
+
+			</div>
+
+            <!-- target variable part -->
+            <div class="row flex-column justify-content-center">
+              <h5 class="card-title pt-3 text-center">
+                  Select model output
+              </h5>
+
+			  <form class="bd-search d-flex align-items-center px-4">
+			    <input type="search" class="form-control" style="background-color: #ff7F2a; color: white;" id="search-input"
+                       placeholder="Search..." aria-label="Search for..." autocomplete="off">
+			  </form>
+            </div>
+
+		  </div>
+
+		</div>
+
+	  </div>
+	</div>
+
+    <div class="row justify-content-center">
+      <div id="menuItems"></div>
+    </div>
+    </div>
+
+    <!-- feature card -->
+    <div class="col-auto">
+  	  <div class="card d-none" id="feature-card">
+	    <h5 class="card-title pt-3 mx-auto">Select input features</h5>
+
+	    <!-- the body populated by js-->
+	    <div class="card-body d-flex mx-2" id="feature-card-body">
+
+	    </div>
+	  </div>
+    </div>
+
+
+  </div>
+
+  <!-- upload part -->
+  <div class="row d-flex flex-grow-1 py-3">
+
+	<!-- column for results -->
+	<div class="col-md-4 d-flex justify-content-center align-items-start" id="leftColumn">
+      <span class="p-3" id=result></span>
+
+	</div>
+
+	<!-- Column for input card -->
+	<div class="col-md-4 d-flex justify-content-center align-items-center">
+	  <!-- input data card -->
+	  <div class="card bg-light w-75" id="uploadCard">
+	    <div class="card-body d-flex flex-column align-items-center" id="dropzone-area-card">
+		  <h5 class="card-title black-col pt-2 mb-auto">Upload data</h5>
+		  <span class="pb-5 my-auto">
+		    <a class="nav-link" id="upload-button">
+			  <i class="bi bi-cloud-plus-fill" id="upload-icon" style="font-size: 3rem;"></i>
+			</a>
+		  </span>
+		</div>
+	  </div>
+	</div>
+
+	<!-- Col for previews template for the output of the upload button -->
+	<div class="col-md-4 d-flex flex-column justify-content-center text-center" id="previews">
+
+	  <div id="template" class="file-row">
+        <p><strong>Filename: </strong><span class="name" data-dz-name></span></p>
+	    <strong class="error text-danger" data-dz-errormessage></strong>
+		<div>
+		  <p><strong>Size: </strong><span class="size" data-dz-size></span></p>
+		  <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+		    <div class="progress-bar progress-bar-success" style="width:0%; background-color: #ff7F2a;" data-dz-uploadprogress></div>
+          </div>
+		</div>
+      </div>
+	</div>
+
+  </div>
+
+  <!-- button part -->
+  <div class="row justify-content-center py-3 d-none" id="dataProfileDiv">
+
+    <button type="button" id="btn-reupload" class="btn btn-primary my-auto justify-content-center align-items-center d-none"
+            data-trigger="hover" title="Not the data you wanted?"
+            data-content="Upload new data."
+            data-placement="right">
+      <i class="bi bi-arrow-clockwise pr-1" style="font-size: 1.2rem;"></i><span>Upload new data</span>
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalDataProfile" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel">PrometheusML Data Report</h5>
+            <button type="button"
+                    class="btn btn-outline-primary justify-content-center ml-auto mr-4 align-items-center btn-download"
+                    data-trigger="hover"
+                    data-html="true"
+                    data-content="Download the data analysis report.<br/> <span class='text-prometheus'>Feature available in the Cloud version</span>."
+                    data-placement="bottom">
+              <i class="bi bi-download pr-1"></i><span>Download analysis</span>
+            </button>
+            <button type="button" class="btn btn-primary btn-close" data-dismiss="modal">Close</button>
+          </div>
+          <div class="modal-body mb-0 p-0" id="modalDataProfileBody">
+
+            <div class="embed-responsive embed-responsive-16by9 z-depth-1-half">
+            <iframe class="embed-responsive-item" id="report_iframe"></iframe>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- progress part -->
+  <div class="row justify-content-center align-items-center">
+      <div class="col-md-8 h-100 d-flex flex-column justify-content-center">
+
+        <!-- The task description -->
+        <span class="pb-1" id="input-progress-info" style="display: none;">
+
+        </span>
+        <!-- The progress bar -->
+        <div class="progress" id="input-progress" style="height: 1.5rem; display: none;" aria-describedby="input-progress-info">
+          <div class="progress-bar" id="input-progressbar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+{% endblock %}
+
+
+<!-- Sidebar content -->
+{% block sidebar_main %}
+
+<button type="button"
+        id="btn-clean-data"
+        class="btn btn-outline-primary mb-auto justify-content-center align-items-center d-none"
+        data-trigger="hover"
+        data-html="true"
+        data-content="Fix corrupted or impute missing data.<br/> <span class='text-prometheus'>Feature available in the Cloud version</span>."
+        data-placement="bottom">
+  <i class="bi bi-clipboard2-check pr-1"></i><span>Clean your data</span>
+</button>
+
+<button type="button" id="btn-data-profile"
+        class="btn btn-primary justify-content-center align-items-center my-auto d-none"
+        data-trigger="hover"
+        data-content="Interactive data visualisation report"
+        data-placement="top">
+  <i class="bi bi-arrow-clockwise pr-1" style="font-size: 1.2rem;"></i><span>Examine your data</span>
+</button>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<!-- helper functions -->
+<script type=text/javascript>
+  function buildDropDown(values) {
+    let contents = []
+    for (let name of values) {
+    contents.push('<input type="button" class="dropdown-item text-center" type="button" value="' + name + '"/>')
+    }
+    $('#menuItems').append(contents.join(""));
+
+  }
+
+  //If the user clicks on any item, set the title of the button as the text of the item
+  $('#menuItems').on('click', '.dropdown-item', function(){
+    $('#search-input').val($(this)[0].value);
+    $("#menuItems").html("");
+
+    // remove the disabled attribute from all the inputs
+    $('#feature-card input').removeAttr("disabled");
+    // uncheck and disable the target
+    let checkbox_target_id = $(this)[0].value.concat('-id')
+    let checkbox_target = document.getElementById(checkbox_target_id);
+    checkbox_target.disabled = true;
+    checkbox_target.checked = false;
+  });
+</script>
+
+<!-- configure dropzone.js -->
+<script type=text/javascript>
+	let previewNode = document.querySelector("#template");
+	previewNode.id = "";
+	let previewTemplate = previewNode.parentNode.innerHTML;
+	previewNode.parentNode.removeChild(previewNode);
+
+	$('#dropzone-area-card').dropzone({
+		url: {{ url_for('main.upload_input', project_id=project.id, dataset_type='training')|tojson }},
+		clickable: "#upload-icon",
+		// autoQueue: false,                       // Make sure the files aren't queued until manually added
+		acceptedFiles: '.csv',                     // check is that is correct for other OS
+		maxFilesize: 100,                          // max file size (MB)
+		maxFiles: "1",                            // Allow more files to be uploaded in the training scenario
+		previewsContainer: "#previews",
+		previewTemplate: previewTemplate,
+		chunking: true,                            // we use the default chunksize
+		retryChunks: true,                         // retry failed chunks. Limit of retries is 3
+		// parallelChunkUploads: true                 // upload the individual chunks of a file simultaneously
+		uploadMultiple: false,                      // deactivate it so we can use chunking
+		// parallelUploads: "5",                       // Upload one file at a time for simpler server logic
+		headers: {
+          'X-CSRF-TOKEN': csrf_token
+    	},
+		// Setup the event listeners
+		init: function() {
+		  // when the user upload files
+          this.on("addedfiles", function() {
+            // Remove existing uploaded data
+            $.ajax({
+              url: {{ url_for('main.remove_upload_data', project_id=project.id, dataset_type="training")|tojson }},
+              type: "POST",
+              success: function(data){
+                console.log("removed the files in the start");
+              }
+            });
+          });
+
+		  // For why we use `queuecomplete` see this issue: https://github.com/dropzone/dropzone/issues/317
+		  this.on("queuecomplete", function(file) {
+		    // get the application areas
+            $.ajax({
+	          type: "POST",
+	          url: {{ url_for('main.get_app_areas')|tojson }},
+            })
+            .done(function(data) {
+              // populate the data
+              let id_arr = data.id_list;
+              let labels_arr = data.labels_list;
+
+              // iterate over the supported application areas
+              for (let i = 0; i < id_arr.length; i++) {
+                let parentDiv = document.getElementById("app-area-row");
+                let radioDiv = create_radio_item(data['id_list'][i], data['labels_list'][i],
+                    name="radioAppArea")
+
+                // append the checkbox div in the DOM
+                parentDiv.appendChild(radioDiv);
+              }
+
+              // show the application of the project
+              const app_area_id = {{ project.app_area|tojson }};
+              const app_area_radio = document.getElementById(app_area_id);
+              app_area_radio.disabled = false
+              app_area_radio.checked = true
+
+              // show the app area card
+              $("#app-card").removeClass("d-none");
+
+              // show the re-upload button
+              $("#btn-reupload").removeClass("d-none").addClass("d-flex");
+
+              $('.progress').hide();  // hide all progress bars
+            })
+            .fail(function() {
+              console.log( "error" );
+            });
+
+            // validate the csv
+            $.ajax({
+	          type: "POST",
+	          url: {{ url_for('main.validate_input', project_id=project.id)|tojson }},
+            })
+            .done(function(data) {
+              if  (data.status === "success") {
+
+                // get the columns of the uploaded file(s)
+                $.post({
+                  url: {{ url_for('main.get_features_input', project_id=project.id)|tojson }},
+                })
+                .done(function(data) {
+                  // remove upload data card
+                  $("#uploadCard").addClass("d-none")
+                  $("#leftColumn").removeClass("d-flex").addClass("d-none")
+
+                  // create the radio items for the feature card
+                  let feature_col_list = data['feature_col_list'];
+
+                  // add the carousel to the card body
+                  const [carouselDiv, carouselDivID] = create_carousel_features(feature_col_list);
+                  document.getElementById("feature-card-body").appendChild(carouselDiv);
+
+                  // show the cards
+                  $("#feature-card").removeClass("d-none");
+
+                  // search for the target -- case-insensitive
+                  $("#search-input").on("keyup", function() {
+                    let value = $(this).val().toLowerCase();
+                    const filter_target_list = feature_col_list.filter(feature => feature.toLowerCase().indexOf(value) > -1);
+                    // clear existing and then re-built
+                    $("#menuItems").html("");
+                    buildDropDown(filter_target_list);
+                  });
+
+                  // show the button for data profiling
+                  $("#dataProfileDiv").removeClass("d-none");
+                  $("#btn-data-profile").removeClass("d-none");
+
+                  // show the data cleaning button
+                  $("#btn-clean-data").removeClass("d-none");
+
+                  // show the button to next page
+                  $(".btn-next").removeClass("d-none");
+
+                })
+                .fail(function (jqXHR, exception, errorMessage) {
+                    $("#errorDiv").removeClass("d-none");
+                    $("#errorMessage").text(jqXHR.responseText);
+                });
+
+              }
+              else {
+                $("#errorDiv").removeClass("d-none");
+			    $("#errorMessage").text(data.message);
+              }
+
+            })
+            .fail(function(data) {
+              $("#errorDiv").removeClass("d-none");
+			  $("#errorMessage").text("Failed to validate the input data. Contact yaiLab.");
+            });
+
+        });
+	  }
+	});
+</script>
+
+
+<script type=text/javascript>
+// function to retrieve the selected features by the user and
+// progress to next step of pipeline
+$(document).ready(function() {
+  $(".btn-next").on("click", function() {
+  	// Page refresh listener only for un-clicked events
+	window.value = true;
+	$("#errorDiv").addClass("d-none");
+
+	// get the selected target
+    let target_name = $('#search-input').val();
+
+    // read the user's selected features
+	let user_selected_features = [];
+	// filter only the elements from the specific div "feature-card"
+	$("#feature-card input:checked").each(function() {
+	  // get the label of the checked items based on their id
+	  let input_id = $(this).attr('id');
+	  let input_label = $("label[for='" + $(this).attr('id') + "']").text();
+
+	  // add the label text to the list
+      user_selected_features.push(input_label);
+	});
+
+    // get the columns of the uploaded file(s)
+    $.post({
+      url: {{ url_for('main.get_features_input', project_id=project.id)|tojson }},
+      error: function (jqXHR, exception, errorMessage) {
+        $("#errorDiv").removeClass("d-none");
+        $("#errorMessage").text(jqXHR.responseText);
+      }
+    })
+    .done(function(data) {
+      let feature_col_list = data['feature_col_list'];
+      // Check that the target is in the feature list, else raise an alert
+      if ( feature_col_list.includes(target_name) ) {
+        console.log("The selected target is in the feature list");
+        // send the user-selected target to the server
+        $.ajax({
+          url: {{ url_for('main.set_target', project_id=project.id)|tojson }},
+	      type: "POST",
+	      data: JSON.stringify({'target_name': target_name}),
+	      dataType: "json",
+          contentType: "application/json; charset=utf-8"
+	    })
+        .done(function() {
+          console.log("successfully sent the target to the server-side");
+          // send the user-selected features list to the server
+          $.ajax({
+            url: {{ url_for('main.set_user_selected_features', project_id=project.id)|tojson }},
+	        type: "POST",
+	        data: JSON.stringify({'user_selected_features': user_selected_features}),
+	        dataType: "json",
+            contentType: "application/json; charset=utf-8"
+	      })
+          .done(function(data) {
+            console.log(data.status);
+	        // when successful go to the next stage
+	        location.href = {{ url_for('main.data_transform_update', project_id=project.id)|tojson }};
+	      });
+        })
+        .fail(function() {
+          $("#errorDiv").removeClass("d-none");
+          $("#errorMessage").text("The output variable wasn't registered, please try again.");
+        });
+
+      } else {
+        $("#errorDiv").removeClass("d-none");
+        $("#errorMessage").text("The selected model output is not in the uploaded data!");
+      }
+
+    });
+
+  });
+});
+
+// function for the reload error
+window.onbeforeunload = function () {
+  if(!window.value) {
+    return '';
+  }
+};
+
+</script>
+
+<script type="text/javascript">
+
+  // redirect them to the data preparation step
+  $('#btn-reupload').bind('click', function(ev) {
+    // Prevent the default submit action
+    ev.preventDefault();
+
+    // Stop the running task
+    $.post({
+      url: {{ url_for('main.stop_job')|tojson }}
+    })
+    .done(function() {
+      window.value = true;
+      location.href = {{ url_for('main.project_input_update', project_id=project.id)|tojson }};
+    })
+    .fail(function(data_stop) {
+      // Show the error message
+      $("#errorDiv").removeClass("d-none");
+      $("#errorMessage").text("Couldn't stop running tasks...");
+    });
+
+  });
+
+</script>
+
+<!-- modal script -->
+<script type="text/javascript">
+const progress_info = $("#input-progress-info");
+const progressbar = $("#input-progressbar");
+const progressDiv = $("#input-progress");
+
+
+$(document).ready(function() {
+  $("#btn-data-profile").on("click", function() {
+
+    $(this).prop('disabled', true);  // disable the button
+    $(this).popover('hide');  // hide the popover
+
+    // Show the progress text
+    progress_info.show();
+    progress_info.text("Started data profiling...");
+    // Show the progress bar
+    progressDiv.show();
+    progressbar.addClass("progress-bar-animated", "progress-bar-striped");
+    set_bar(0);
+    update_bar(99);
+
+    // get the features selected by the user
+	let user_selected_features = [];
+	// filter only the elements from the specific div "feature-card"
+	$("#feature-card input:checked").each(function() {
+	  // get the label of the checked items based on their id
+	  let input_id = $(this).attr('id');
+	  let input_label = $("label[for='" + $(this).attr('id') + "']").text();
+	  // add the label text to the list
+      user_selected_features.push(input_label);
+    });
+
+    // create the report
+    $.ajax({
+      url: {{ url_for('main.get_data_profile', project_id=project.id)|tojson }},
+      type: "POST",
+      data: JSON.stringify({'user_selected_features': user_selected_features}),
+      dataType: "json",
+      contentType: "application/json; charset=utf-8"
+    })
+      .done(function(res) {
+        // run the function recursively to check the status
+        (function checkStatus(taskID) {
+          $.ajax({
+            url: `/tasks/${taskID}/status`,
+            method: 'GET',
+          })
+          .done((res) => {
+            const taskStatus = res.data.task_status;
+
+            switch (taskStatus) {
+              case "unknown":
+                progress_info.text("Profiling of uploaded data has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              case "finished":
+
+                $.ajax({
+                  url: `/tasks/${taskID}/result`,
+                  method: 'GET',
+                })
+                .done((res) => {
+                  if (res.status === "success") {
+
+                    // show that the task was completed
+                    progress_info.text("Prometheus completed the data profiling!");
+                    set_bar_stop(100);
+
+                    // enable the button
+                    $('#btn-data-profile').prop('disabled', false);
+                    // embed data profile
+                    let modalBody = document.getElementById("modalDataProfileBody");
+                    let iframe_report = document.getElementById("report_iframe");
+
+                    let doc = document.getElementById('report_iframe').contentWindow.document;
+                    doc.open();
+                    doc.write(res.data.task_result);
+                    doc.close();
+
+                    // show the modal
+                    $('#modalDataProfile').modal('show');
+
+                  } else {
+                        progress_info.text("Prometheus couldn't get the predictions (contact yaiLab");
+                        set_bar_stop(0);
+                  }
+                })
+                .fail((err) => {
+                  console.log(err);
+                });
+
+                break;
+              case "failed":
+                progress_info.text("Profiling of uploaded data has failed... Unknown error (contact yaiLab)");
+                $(this).prop('disabled', false);
+                break;
+              default:
+                // queued/started/deferred
+                setTimeout(function() {
+                  checkStatus(res.data.task_id);
+                }, 5000);
+            }
+          })
+          .fail((err) => {
+            console.log(err);
+          });
+        })(res.data.task_id)
+
+      })
+      .fail(function(jqXHR, exception, errorMessage) {
+        $("#errorDiv").removeClass("d-none");
+        $("#errorMessage").text(jqXHR.responseText);
+        set_bar_stop(0);
+      });
+
+    })
+  });
+
+
+$(document).ready(function() {
+  $(".btn-close").on("click", function(ev) {
+
+    progress_info.hide();  // hide progress info
+    $('.progress').hide();  // hide all progress bars
+    $('.btn-download').removeClass("d-none");  // show the side download button
+
+  })
+});
+</script>
+
+{% endblock %}

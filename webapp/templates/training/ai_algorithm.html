@@ -1,0 +1,798 @@
+{% extends "training/base_prometheus.html" %}
+
+<!-- The main page content -->
+{% block page_content %}
+
+	<div class="row mb-4 align-items-center">
+
+      <!-- column for algorithm selection -->
+	  <div class="col-md-4">
+
+		<div class="card w-75 mx-auto">
+		  <div class="card-body" id="card-algo-update">
+
+			<div class="col-12 justify-content-center">
+			  <div class="row">
+			    <h5 class="card-title pt-1 pb-2 mx-auto">Select algorithm</h5>
+			  </div>
+
+              <div class="row justify-content-center">
+				<div class="d-flex flex-column" id="AlgorithmContainer">
+
+			    </div>
+			  </div>
+
+		    </div>
+		  </div>
+	    </div>
+
+	  </div>
+
+      <!-- column for algorithm parameters	-->
+	  <div class="col-md-4">
+
+		<!-- card for auto/manual algo param -->
+		<div class="card w-75 mx-auto">
+		  <div class="card-body" id="card-algo-param-update">
+
+			<div class="col-12 justify-content-center">
+			  <div class="row">
+			    <h5 class="card-title pt-1 pb-2 mx-auto">Algorithm parameters</h5>
+			  </div>
+
+              <div class="row justify-content-center">
+				<div class="d-flex flex-column">
+			      <div class="custom-control custom-radio">
+				   <input type="radio" id="radioAutoAlgoParams" name="customRadioAlgoParams" class="custom-control-input" checked disabled>
+				   <label class="custom-control-label"
+                          for="radioAutoAlgoParams"
+                          data-trigger="hover"
+                          data-html="true"
+                          data-content="Automatic training by Prometheus<span class='text-prometheus'>ML</span>. <br/> <span class='text-prometheus'>This feature is locked</span>."
+                          data-placement="bottom">
+                     Automatic
+                   </label>
+			      </div>
+
+			      <div class="custom-control custom-radio">
+				    <input type="radio" id="radioManualAlgoParams" name="customRadioAlgoParams" class="custom-control-input">
+				    <label class="custom-control-label" for="radioManualAlgoParams">Manual</label>
+			      </div>
+
+			    </div>
+			  </div>
+
+		    </div>
+		  </div>
+	    </div>
+
+	  </div>
+
+	  <!-- column for hyperparameter search	-->
+	  <div class="col-md-4">
+
+	    <div class="card w-75 mx-auto">
+		  <div class="card-body" id="card-hyperparam-update">
+
+			<div class="col-12 justify-content-center">
+			  <div class="row">
+			    <h5 class="card-title pt-1 pb-2 mx-auto"
+                    data-trigger="hover"
+                    data-content="iteratively looks for the best parameters that control learning"
+                    data-placement="top">
+                    Hyperparameter search
+                </h5>
+			  </div>
+
+              <div class="row justify-content-center">
+				<div class="d-flex flex-column" id="SearchContainer">
+
+			    </div>
+			  </div>
+
+		    </div>
+		  </div>
+	    </div>
+
+	  </div>
+
+	</div>
+
+	<div class="row">
+      <!-- container for algo parameters inputs-->
+	  <div class="col-md-8 justify-content-center" id="AlgoParamContainer">
+	  </div>
+      <!-- container for hyper parameters inputs-->
+      <div class="col-md-4" id="HyperParamContainer">
+	  </div>
+	</div>
+
+	<!-- button container -->
+    <div class="row my-4 justify-content-center">
+	  <div class="col-md-6">
+	    <button type="button" id="btn-train" class="btn btn-primary d-flex mx-auto" disabled>
+	      <i class="bi bi-play-fill pr-1" style="font-size: 1.2rem;"></i><span class="my-auto">Training awaits...</span>
+	    </button>
+	  </div>
+    </div>
+
+	<!-- error message div -->
+	<div class="row text-center text-danger d-none" id="errorDiv">
+	  <h5 id="errorMessage"></h5>
+	</div>
+
+	<!-- progress bar container -->
+	<div class="row justify-content-center align-items-center">
+	  <div class="col-md-8 h-100 d-flex flex-column justify-content-center">
+		
+		<!-- comment in jinja2 -->
+		{# {% include 'utils/_progress.html' %} #}
+		
+		<!-- The task description -->
+		<span class="pb-1" id="algo-update-progress-info" style="display: none;">
+		  Description of the task... 
+		</span>
+		<!-- The progress bar -->
+		<div class="progress" id="algo-update-progress" style="height: 1.5rem; display: none;" aria-describedby="progress-info">
+		  <div class="progress-bar" id="algo-update-progressbar" role="progressbar" style="width: 25%; background-color: #ff7F2a;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+		</div>
+	
+	  </div>
+	</div>	  
+
+
+{% endblock %}
+
+<!-- Sidebar content -->
+{% block sidebar_main %}
+
+<button type="button"
+        class="btn btn-primary btn-stop mb-auto justify-content-center align-items-center d-none">
+  <i class="bi bi-stop-fill pr-1" style="font-size: 1.2rem;"></i><span>Stop</span>
+</button>
+
+{% endblock %}
+
+
+{% block scripts %}
+<!-- load the contents of the parent block -->
+{{ super() }}
+
+<!--Plugin CSS file with desired skin-->
+<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/ion.rangeSlider.min.css') }}">
+
+<!--Plugin range slider js-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
+
+<script type=text/javascript>
+  // function to stop the running task
+  $(function() {
+    $('.btn-stop').bind('click', function(ev) {
+	  // Prevent the default submit action
+	  ev.preventDefault();
+
+	  // Stop the task
+	  $.post({
+		url: {{ url_for('main.stop_job')|tojson }}
+	  })
+	  .done(function(data_stop) {
+		$("#algo-update-progress-info").text(data_stop.message);  // Update the progressbar
+		$(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+        $("#btn-train").prop('disabled', false);     // enable button
+        $(".algorithm").prop("disabled", false);   // enable all algorithm inputs
+        $(".js-range-slider").not(".hyperparamRange").each(function() {
+          $( this ).data("ionRangeSlider").update({block: false});
+        });   // enable ranges
+        intervals.forEach(clearInterval);  // stop running interval for progress bar
+	  })
+	  .fail(function(data_stop) {
+	    // Show the error message
+		$("#errorDiv").removeClass("d-none");
+		$("#errorMessage").text(data_stop.errorMessage);
+	  });
+    });
+  });
+</script>
+
+<script type=text/javascript>
+  // get the updated algo on click
+  $(function() {
+    $("#AlgorithmContainer").on("click", "input[name='radioAlgorithm']", function(event) {
+      let selected_algorithm = event.target.id;
+      console.log(selected_algorithm);
+
+      // send it to the server
+      $.ajax({
+        url: {{ url_for('main.set_algo_type', project_id=project.id)|tojson }},
+        type: "POST",
+        data: JSON.stringify({'selected_algorithm': selected_algorithm}),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+      })
+      .done(function(data) {
+        console.log(data.pipeline);
+
+        // toggle between algorithms' parameters in manual
+        if ($("#radioManualAlgoParams").is(':checked')) {
+          // Return the available params from the server
+          $.post({
+            url: {{ url_for('main.get_algo_params_list', project_id=project.id)|tojson }}
+          })
+          .done(function(data) {
+            // get the number of params
+            const no_params = data.labels_list.length;
+
+            // Get the necessary params attributes
+            let min_list = data.min_list;
+            let max_list = data.max_list;
+            let step_list = data.step_list;
+            let label_list = data.labels_list;
+            let id_list= data.id_list;
+            let to_list = data.to_list;
+            let from_list = data.from_list;
+            let scale_list = data.scale_list;
+            let info_list = data.info_list;
+
+            let RangeContainerDiv = document.getElementById("AlgoParamContainer");
+            // Remove the existing sliders
+            RangeContainerDiv.textContent = '';
+
+            // construct the range sliders
+            for (let i = 0; i < no_params; i++) {
+              let sliderDiv = create_range_slider (id=id_list[i], label=label_list[i],
+                  align="center",
+                  description=info_list[i],
+                  desc_placement="bottom"
+              )
+
+              // append the checkbox div in the DOM
+              RangeContainerDiv.appendChild(sliderDiv);
+
+              // launch the range slider plugin
+              const param_div_id = "#" + id_list[i];
+              let $range = $(param_div_id);
+
+              $range.ionRangeSlider({
+                skin: "round",
+                type: "double",
+                hide_min_max: true,
+                min: min_list[i],
+                max: max_list[i],
+                from: from_list[i],
+                to: to_list[i],
+                step: step_list[i],
+                scale: scale_list[i],
+                prettify: function(number) {
+
+                  if (this.scale === "log10") {
+                    const out_num = "1e" + number;
+
+                    return Number(out_num);
+                  } else {
+                    return number;
+                  }
+
+                }
+              });
+
+            }
+            $('[data-trigger="hover"]').popover();  // initialise the popovers to include the generated ones
+          })
+          .fail(function(data) {
+            console.log("It has failed to get the list of parameters.")
+          });
+
+        }
+
+      })
+      .fail(function(data) {
+        console.log("failed to update the db with the algorithm");
+      });
+
+
+    });
+  });
+</script>
+
+
+<script type=text/javascript>
+  const progress_info = $("#algo-update-progress-info");
+  const progressbar = $("#algo-update-progressbar");
+  const progressDiv = $("#algo-update-progress");
+
+  $(function() {
+    $('#btn-train').on('click', function(ev) {
+      // Prevent the default submit action
+      ev.preventDefault();
+
+      // disable
+      $(this).prop('disabled', true);       // disable button
+      $("input").prop("disabled", true);   // disable all inputs
+      $(".js-range-slider").each(function() {
+          $( this ).data("ionRangeSlider").update({block: true});
+        });   // disable ranges
+
+      // in case the have selected to run the manual method
+	  if ($("#radioManualAlgoParams").is(':checked')) {
+	  	// Show that the progress has started
+        progress_info.show();
+        progressDiv.show();
+        set_bar(0);
+        update_bar(50);
+
+	    // Get the user selected slider inputs
+		let algo_params_names_values = [];
+		$("#AlgoParamContainer .irs--round").each(function() {
+            let slider_id = $( this ).siblings().attr('id');
+            let from_num = Number($( this ).children(".irs").children(".irs-from").text());
+            let to_num = Number($( this ).children(".irs").children(".irs-to").text());
+
+            algo_params_names_values.push({'param_name': slider_id,
+			  'param_min': from_num, 'param_max': to_num
+            });
+        });
+
+		// Get the user selected hyperparameter slider inputs
+        let hyper_params_names_values = [];
+        $("#HyperParamContainer .irs--round").each(function() {
+            let slider_id = $( this ).siblings().attr('id');
+            let from_num = Number($( this ).children(".irs").children(".irs-single").text());
+
+            hyper_params_names_values.push(
+                {'param_name': slider_id, 'param_value': from_num}
+                );
+        });
+
+        // Send the request
+		$.ajax({
+	      url: {{ url_for('main.train_model', project_id=project.id)|tojson }},
+	      type: "POST",
+	      data: JSON.stringify(
+	          {'params_names_values': algo_params_names_values,
+              'hyper_params_names_values': hyper_params_names_values}
+              ),
+	      dataType: "json",
+          contentType: "application/json; charset=utf-8"
+        })
+        .done(function(res) {
+          // show initial message from server
+          progress_info.text(res.info);
+
+          // show the stop button
+		  $(".btn-stop").removeClass("d-none").addClass("d-flex");
+
+		  // run the function recursively to check the status
+          (function checkStatus(taskID) {
+            $.ajax({
+              url: `/tasks/${taskID}/status`,
+              method: 'GET',
+            })
+            .done((res) => {
+              const taskStatus = res.data.task_status;
+              console.log(taskStatus);
+
+              switch (taskStatus) {
+                case "unknown":
+                  progress_info.text("Model training has failed... Unknown error (contact yaiLab)");
+                  $(this).prop('disabled', false);
+                  break;
+                case "finished":
+                  // update models in the db
+                  $.ajax({
+                    url: {{ url_for('main.set_algo_db', project_id=project.id)|tojson }},
+                    type: "POST",
+                    data: JSON.stringify({'task_id': res.data.task_id}),
+                    dataType: "json",
+                    contentType: "application/json; charset=utf-8"
+                  })
+                  .done((res_db) => {
+                    // run the function recursively to check the status
+                    (function checkStatus(taskID) {
+                      $.ajax({
+                        url: `/tasks/${taskID}/status`,
+                        method: 'GET',
+                      })
+                      .done((res) => {
+                        const taskStatus = res.data.task_status;
+                        switch (taskStatus) {
+                          case "unknown":
+                            progress_info.text("Updating the database has failed... Unknown error (contact yaiLab)");
+                            $(this).prop('disabled', false);
+                            break;
+                          case "finished":
+
+                            // register model params in the server
+                            $.post({
+                              url: {{ url_for('main.set_trained_model_params', project_id=project.id)|tojson }}
+                            })
+                            .done(function(data) {
+                              // show that the task was completed
+                              progress_info.text("Prometheus completed model training!");
+                              set_bar_stop(100);
+                              $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+                              $(".btn-next").removeClass("d-none");  // show the button to validation step
+
+                              console.log(data.pipeline); // show updated pipeline
+                            })
+                            .fail(function(data) {
+                              progress_info.text("Getting the parameters of the trained model has failed... Unknown error (contact yaiLab)");
+                              set_bar_stop(0);
+                              $(this).prop('disabled', false);
+                            });
+
+                            break;
+                          case "failed":
+                            progress_info.text("Updating the database has failed... Unknown error (contact yaiLab)");
+                            $(this).prop('disabled', false);
+                            break;
+                          case "stopped":
+                            $(this).prop('disabled', false);
+                            break;
+                          default:
+                            // queued/started/deferred
+                            setTimeout(function() {
+                              checkStatus(res_db.data.task_id);
+                            }, 5000);
+                        }
+
+                      })
+                      .fail((err) => {
+                        console.log(err);
+                      });
+                    })(res_db.data.task_id)
+
+                  })
+                  .fail(function(data) {
+                    console.log("failed to update the db with the model params");
+                  });
+
+                  break;
+                case "failed":
+                  progress_info.text("Model training has failed... Unknown error (contact yaiLab)");
+                  $(this).prop('disabled', false);
+                  $(".btn-stop").addClass("d-none").removeClass("d-flex");  // hide the stop button
+                  break;
+                case "stopped":
+                  $(this).prop('disabled', false);
+                  break;
+                default:
+                  // queued/started/deferred
+                  setTimeout(function() {
+                    checkStatus(res.data.task_id);
+                  }, 5000);
+              }
+            })
+            .fail((err) => {
+              console.log(err);
+            });
+          })(res.data.task_id)
+
+        })
+	    .fail(function(err) {
+	      set_bar_stop(0);
+	      console.log(err);
+        });
+
+	  }
+
+	  // in case they have selected the automatic
+	  if ($("#radioAutoAlgoParams").is(':checked')) {
+		console.log('the auto option has been called');
+
+		// Show that the progress has started
+        $("#algo-update-progress-info").show();
+	    $("#algo-update-progress-info").text('Sit back and relax, PrometheusML is working on your model...');
+
+	    // Reset the progress bar when user re-clicks it
+	    $("#algo-update-progress").show();
+	    set_bar(0);
+        update_bar(50);
+
+	    // Send the request
+		$.ajax({
+	      url: {{ url_for('main.train_model', project_id=project.id)|tojson }},
+	      type: "POST",
+	      data: JSON.stringify({}),  // Pass an empty JSON of parameters
+	      dataType: "json",
+          contentType: "application/json; charset=utf-8",
+	      success: function(data) {
+		  // console.log(data.result)
+			$("#algo-update-progress").show();
+			$("#algo-update-progress-info").text(data.info);
+			$("#algo-update-progressbar").css({ "width": data.progress + "%" });
+			$("#algo-update-progressbar").text(data.progress + "%");
+		  }
+		})
+		// on success of the `Promise` object
+		  .done(function() {
+			$(".btn-next").removeClass("d-none");
+		});
+	  }
+	});
+
+  });
+
+</script>
+
+<script type="text/javascript">
+
+ $('.btn-next').on('click', function(ev) {
+   // Prevent the default submit action
+   ev.preventDefault();
+   // set global value so it skips the check on pafe refresh
+   window.value = true;
+   location.href = {{ url_for('main.model_validate_update', project_id=project.id)|tojson }};
+ });
+
+
+$(function() {
+    window.onbeforeunload = function () {
+        if (!window.value) {
+            return '';
+        }
+    };
+});
+</script>
+
+<script type="text/javascript">
+  // read the config file(s) for the algorithms at the page load
+  $(document).ready(function(){
+    // Return the available algorithms from the server
+    $.post({
+      url: {{ url_for('main.get_algo_list', project_id=project.id)|tojson }}
+    })
+    .done(function(data) {
+      // populate the data
+      let id_arr = data.id_list;
+
+      // iterate over the supported algorithms
+      for (let i = 0; i < id_arr.length; i++) {
+        let parentDiv = document.getElementById("AlgorithmContainer");
+        let radioDiv = create_radio_item(
+            id=data['id_list'][i],
+            label=data['labels_list'][i],
+            name="radioAlgorithm", checked=false, disabled=false,
+            description=data['desc_list'][i],
+            desc_placement="right",
+            data_html="true",
+            href_info=data['href_list'][i],
+            class_name="algorithm"
+        )
+
+        parentDiv.appendChild(radioDiv);  // append the checkbox div in the DOM
+        // initialise popover to stay open while hovering over them
+        $(".algorithm").popover({
+          trigger: "manual",
+          html: true,
+        }).on("mouseenter", function() {
+          let _this = this;
+          $(this).popover("show");
+          $(".popover").on("mouseleave", function() {
+            $(_this).popover('hide');
+          });
+        }).on("mouseleave", function() {
+          let _this = this;
+          setTimeout(function() {
+            if (!$(".popover:hover").length) {
+              $(_this).popover("hide");
+            }
+          }, 100);
+        });
+
+      }
+
+      // show default from database
+      let default_algo_id = {{ project.algorithm|tojson }};
+      // let default_algoElem = document.getElementById(default_algo_id);
+      // default_algoElem.checked = true;
+
+    })
+    .fail(function(data) {
+      console.log("It has failed to get the list of parameters.")
+    });
+  });
+
+
+  // read the config file(s) for the hyperparameter search at the page load
+  $(document).ready(function(){
+    console.log()
+    // Return the available search strategies from the server
+    $.post({
+      url: {{ url_for('main.get_hyperparam_search_list', project_id=project.id)|tojson }}
+    })
+    .done(function(data) {
+      // populate the data
+      let id_arr = data.id_list;
+
+      // iterate over the supported search strategies
+      for (let i = 0; i < id_arr.length; i++) {
+        let parentDiv = document.getElementById("SearchContainer");
+        let radioDiv = create_radio_item(data['id_list'][i], data['labels_list'][i],
+            name="radioSearchHyper", checked=false, disabled=true)
+
+        // append the checkbox div in the DOM
+        parentDiv.appendChild(radioDiv);
+      }
+
+      // have the random search selected
+      let default_radio = document.getElementById(data['id_list'][0]);
+      default_radio.checked = true
+
+      let selected_hyper = data['id_list'][0];
+
+      // send the selected strategy to the server
+      $.ajax({
+        url: {{ url_for('main.set_hyper', project_id=project.id)|tojson }},
+        type: "POST",
+        data: JSON.stringify({'selected_hyper': selected_hyper}),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+      })
+      .done(function(data) {
+        console.log(data.pipeline);
+
+        // load the params for the hyperparam tuning
+        $.post({
+          url: {{ url_for('main.get_hyper_params_list', project_id=project.id)|tojson }}
+        })
+        .done(function(data) {
+          let RangeContainerDiv = document.getElementById("HyperParamContainer");
+          // Remove the existing sliders
+          RangeContainerDiv.textContent = '';
+
+          let label_list = data.labels_list;
+          let id_list= data.id_list;
+          const no_params = data.labels_list.length;
+
+          // construct the range sliders
+          for (let i = 0; i < no_params; i++) {
+            let sliderDiv = create_range_slider (id=id_list[i], label=label_list[i])
+
+            // append the checkbox div in the DOM
+            RangeContainerDiv.appendChild(sliderDiv);
+
+            // launch the range slider plugin
+            const param_div_id = "#" + id_list[i];
+            let $range = $(param_div_id);
+
+			// Add a custom class
+			$range.addClass("hyperparamRange");
+
+            $range.ionRangeSlider({
+                skin: "round",
+                type: "single",
+                hide_min_max: true,
+                min: data.min_list[i],
+                max: data.max_list[i],
+                from: data.value_list[i]
+            });
+
+			// Disable range slider
+          	$range.data("ionRangeSlider").update({block: true});
+
+          }
+
+          console.log(data)
+        })
+        .fail(function(data) {
+          console.log("It has failed to get the list of parameters for hyperparameter tuning.")
+        });
+
+      })
+      .fail(function(data) {
+        console.log("It has failed to get the list of parameters for hyperparameter tuning.")
+      });
+
+    })
+    .fail(function(data) {
+      console.log("It has failed to get the list of hyperparameter search strategies.")
+    });
+  });
+
+</script>
+
+
+<script type="text/javascript">
+	// read the config file(s) at the page load
+
+	// function that runs the logic when manual feature extraction is selected
+	// two listeners on load of the page and on change
+	$(document).ready(function(){
+	  $("#radioManualAlgoParams").on("change",function() {
+	    if (this.checked) {
+	      console.log('the manual has been called');
+          $('#btn-train').attr("disabled", false);
+
+          // Return the available params from the server
+		  $.post({
+		    url: {{ url_for('main.get_algo_params_list', project_id=project.id)|tojson }}
+		  })
+		  .done(function(data) {
+		    // get the number of params
+			no_params = data.labels_list.length;
+
+			// Get the necessary params attributes
+			let min_list = data.min_list;
+			let max_list = data.max_list;
+			let step_list = data.step_list;
+			let label_list = data.labels_list;
+			let id_list= data.id_list;
+			let to_list = data.to_list;
+			let from_list = data.from_list;
+			let scale_list = data.scale_list;
+			let info_list = data.info_list;
+
+			let RangeContainerDiv = document.getElementById("AlgoParamContainer");
+			// Remove the existing sliders
+			RangeContainerDiv.textContent = '';
+
+			// construct the range sliders
+			for (let i = 0; i < no_params; i++) {
+			  let sliderDiv = create_range_slider (
+			      id=id_list[i],
+                  label=label_list[i],
+                  align="center",
+                  description=info_list[i],
+                  desc_placement="bottom"
+              )
+
+			  // append the checkbox div in the DOM
+			  RangeContainerDiv.appendChild(sliderDiv);
+
+			  // launch the range slider plugin
+			  const param_div_id = "#" + id_list[i];
+			  $(param_div_id).ionRangeSlider({
+			    skin: "round",
+				type: "double",
+				hide_min_max: true,
+				min: min_list[i],
+				max: max_list[i],
+				from: from_list[i],
+				to: to_list[i],
+				step: step_list[i],
+                scale: scale_list[i],
+                prettify: function(number) {
+
+                  if (this.scale === "log10") {
+                    const out_num = "1e" + number;
+
+                    return Number(out_num);
+                  } else {
+                    return number;
+                  }
+
+                }
+			  });
+			}
+
+			$('[data-trigger="hover"]').popover();  // initialise the popovers to include the generated ones
+
+		  })
+		  .fail(function(data) {
+		  	console.log("It has failed to get the list of parameters.")
+		  });
+
+		}
+	  });
+	  $('#radioManualAlgoParams').trigger('change');
+	});
+
+
+	// function that runs the logic when manual feature extraction is selected
+	$(document).on('change','#radioAutoAlgoParams',function() {
+	  if (this.checked) {
+		console.log('the auto has been called');
+
+		let RangeContainerDiv = document.getElementById("AlgoParamContainer");
+		// Remove the existing sliders
+		RangeContainerDiv.textContent = '';
+	  }
+	});
+
+</script>
+
+
+{% endblock %}
+
+
+	

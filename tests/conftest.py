@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from webapp import create_app
+from webapp import create_app, db
 from webapp.models import Role, User
 
 
@@ -29,7 +29,11 @@ def app():
             "TESTING": True,
         }
     )
-    return app
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
 
 @pytest.fixture(scope="module")

@@ -5,9 +5,38 @@
 # Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+image: "python:3.9.12"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+before_script:
+  - python --version
+  - pip install micropipenv
+  - micropipenv install --dev
+  - pip install flake8-comprehensions==3.7.0 && pip install flake8-bugbear==21.3.2 & pip install pytest && pip install isort
+
 stages:
-- test
+  - static analysis
+  - test
+
 sast:
   stage: test
 include:
 - template: Security/SAST.gitlab-ci.yml
+
+flake8:
+  stage: static analysis
+  script: flake8 --config .flake8 prometheus webapp tests
+
+isort:
+  stage: static analysis
+  script: isort prometheus webapp tests
+
+pytest:
+  stage: test
+  script: pytest
